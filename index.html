@@ -23,10 +23,6 @@ body {
   stroke-width: 1.5px;
 }
 
-.line.fat {
-  stroke: orange;
-}
-
 </style>
 <body>
 <script src="https://d3js.org/d3.v3.min.js"></script>
@@ -52,13 +48,12 @@ var yAxis = d3.svg.axis()
     .scale(y)
     .orient("left");
 
-var line_weight = d3.svg.line()
-    .x(function(d) { return x(d.date); })
-    .y(function(d) { return y(d.weight); });
-
-var line_fat = d3.svg.line()
-    .x(function(d) { return x(d.date); })
+var line = d3.svg.line()
+    .x(function(d) { return x(d.weight); })
     .y(function(d) { return y(d.fat); });
+
+var title = d3.select("body").append("h2")
+    .text("Wykresik");
 
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -68,8 +63,8 @@ var svg = d3.select("body").append("svg")
 
 var render = function(data) {
   svg.selectAll("g,path").remove();
-
-  x.domain(d3.extent(data, function(d) { return d.date; }));
+  var start_stop = d3.extent(data, function(d) { return d.date });
+  title.text(formatDate(start_stop[0]) + " - " + formatDate(start_stop[1]));
 
   svg.append("g")
       .attr("class", "x axis")
@@ -84,33 +79,29 @@ var render = function(data) {
       .attr("y", 6)
       .attr("dy", ".71em")
       .style("text-anchor", "end")
-      .text("Weight/Fat (kg/%)");
+      .text("Fat (%)");
 
   svg.append("path")
       .datum(data)
-      .attr("class", "line weight")
-      .attr("d", line_weight);
-  svg.append("path")
-      .datum(data)
-      .attr("class", "line fat")
-      .attr("d", line_fat);
+      .attr("class", "line")
+      .attr("d", line);
 };
 
 d3.csv("Withings.csv", type, function(error, data) {
   if (error) throw error;
 
   var start_stop = d3.extent(data, function(d) { return d.date })
-  var last_week = d3.time.week(start_stop[0]);
+  var last = start_stop[0];
 
-  var y_max = d3.max(data, function(d) { return d3.max([d.weight, d.fat]) });
-  y.domain([0, y_max]);
+  x.domain(d3.extent(data, function(d) { return d.weight; }));
+  y.domain(d3.extent(data, function(d) { return d.fat; }));
 
   data.sort(function(d) { return d.date; });
   setInterval(function() {
-    var week_data = data.filter(function(d) { return d3.time.week(d.date).getTime() == last_week.getTime(); });
+    var week_data = data.filter(function(d) { return (d.date.getTime() >= last.getTime()) && (d.date.getTime() < d3.time.week.offset(last, 1).getTime()); });
     render(week_data);
-    last_week = d3.time.week.offset(last_week, 1);
-    if (last_week.getTime() > d3.time.week(start_stop[1]).getTime()) last_week = d3.time.week(start_stop[0]);
+    last = d3.time.day.offset(last, 1);
+    if (last.getTime() >= start_stop[1].getTime()) last = start_stop[0];
   }, 1000);
 });
 
