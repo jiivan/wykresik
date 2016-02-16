@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.line.fat {
+  stroke: orange;
+}
+
+</style>
+<body>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var formatDate = d3.time.format("%Y-%m-%d %I:%M %p");
+
+var x = d3.time.scale()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var line_weight = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.weight); });
+
+var line_fat = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.fat); });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var render = function(data) {
+  svg.selectAll("g,path").remove();
+
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Weight/Fat (kg/%)");
+
+  svg.append("path")
+      .datum(data)
+      .attr("class", "line weight")
+      .attr("d", line_weight);
+  svg.append("path")
+      .datum(data)
+      .attr("class", "line fat")
+      .attr("d", line_fat);
+};
+
+d3.csv("Withings.csv", type, function(error, data) {
+  if (error) throw error;
+
+  var start_stop = d3.extent(data, function(d) { return d.date })
+  var last_week = d3.time.week(start_stop[0]);
+
+  var y_max = d3.max(data, function(d) { return d3.max([d.weight, d.fat]) });
+  y.domain([0, y_max]);
+
+  data.sort(function(d) { return d.date; });
+  setInterval(function() {
+    var week_data = data.filter(function(d) { return d3.time.week(d.date).getTime() == last_week.getTime(); });
+    render(week_data);
+    last_week = d3.time.week.offset(last_week, 1);
+    if (last_week.getTime() > d3.time.week(start_stop[1]).getTime()) last_week = d3.time.week(start_stop[0]);
+  }, 1000);
+});
+
+function type(d) {
+  d.date = formatDate.parse(d.date);
+  d.weight = +d.weight;
+  d.fat = +d.fat;
+  return d;
+}
+
+</script>
