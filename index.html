@@ -34,7 +34,7 @@ var margin = {top: 20, right: 20, bottom: 30, left: 50},
 
 var formatDate = d3.time.format("%Y-%m-%d %I:%M %p");
 
-var x = d3.time.scale()
+var x = d3.scale.linear()
     .range([0, width]);
 
 var y = d3.scale.linear()
@@ -61,10 +61,59 @@ var svg = d3.select("body").append("svg")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+var path = null;
+
+var render_seven = function(data, last_transition, first_idx, previous_idx) {
+  console.log('render_seven(%o, %o)', first_idx, previous_idx);
+  var first_day = data[first_idx].date
+  var next_day = d3.time.day.offset(first_day, 1);
+  var last_day = d3.time.week.offset(first_day, 1);
+  var previous_last_day = d3.time.day.offset(last_day, -1);
+  var next_idx = null;
+  var make_transition = function(current_idx) {
+      if ((current_idx - previous_idx > 10) && previous_idx < first_idx) previous_idx++;
+      var current_data = data.map(function(d, idx) {
+        if (idx < previous_idx) return data[previous_idx];
+        if (idx > current_idx) return data[current_idx];
+        return d;
+      });
+      last_transition = last_transition.transition()
+          .attr("d", line(current_data))
+      return last_transition;
+  };
+  d3.range(first_idx, data.length).forEach(function(current_idx) {
+      if (data[current_idx].date.getTime() > last_day.getTime()) return false;
+      if (next_idx === null && data[current_idx].date.getTime() >= next_day.getTime()) next_idx = current_idx;
+      if (first_idx > 0 && data[current_idx].date.getTime() < previous_last_day.getTime()) return true;
+      last_transition = make_transition(current_idx);
+  });
+  console.log('previous_idx: %o first_idx: %o next_idx: %o', previous_idx, first_idx, next_idx);
+  return [last_transition, next_idx];
+}
 var render = function(data) {
-  svg.selectAll("g,path").remove();
-  var start_stop = d3.extent(data, function(d) { return d.date });
-  title.text(formatDate(start_stop[0]) + " - " + formatDate(start_stop[1]));
+  var last_transition = path.transition()
+    .delay(10)
+    .duration(160)
+    .ease("linear");
+
+  var first_idx = 0;
+  var previous_idx = first_idx;
+  var render_tick = function() {
+      var result = render_seven(data, last_transition, first_idx, previous_idx);
+      last_transition = result[0];
+      previous_idx = first_idx;
+      first_idx = result[1];
+      if (first_idx === null) return;
+      if (first_idx < data.length) setTimeout(render_tick, 1000);
+  };
+  render_tick();
+};
+
+d3.csv("Withings.csv", type, function(error, data) {
+  if (error) throw error;
+
+  x.domain(d3.extent(data, function(d) { return d.weight; }));
+  y.domain(d3.extent(data, function(d) { return d.fat; }));
 
   svg.append("g")
       .attr("class", "x axis")
@@ -81,38 +130,24 @@ var render = function(data) {
       .style("text-anchor", "end")
       .text("Fat (%)");
 
-  svg.append("path")
-      .datum(data)
-      .attr("class", "line")
-      .attr("d", line);
-};
-
-d3.csv("Withings.csv", type, function(error, data) {
-  if (error) throw error;
-
-  var start_stop = d3.extent(data, function(d) { return d.date })
-  var last = start_stop[0];
-
-  x.domain(d3.extent(data, function(d) { return d.weight; }));
-  y.domain(d3.extent(data, function(d) { return d.fat; }));
+  path =
+    svg.append("path")
+        .datum([])
+        .attr("class", "line")
+        .attr("d", line);
 
   data.sort(function(d) { return d.date; });
-  setInterval(function() {
-    var week_data = data.filter(function(d) { return (d.date.getTime() >= last.getTime()) && (d.date.getTime() < d3.time.week.offset(last, 1).getTime()); });
-    render(week_data);
-    last = d3.time.day.offset(last, 1);
-    if (last.getTime() >= start_stop[1].getTime()) last = start_stop[0];
-  }, 1000);
+  render(data);
 });
 
 var last_fat = 0;
 var last_weight = 0;
 
 function type(d) {
-  d.date = formatDate.parse(d.date);
-  d.weight = +d.weight;
+  d.date = formatDate.parse(d.Date);
+  d.weight = +d['Weight (kg)'];
   if (d.weight <= 0) d.weight = last_weight;
-  d.fat = +d.fat;
+  d.fat = +d['Fat mass (%)'];
   if (d.fat <= 0) d.fat = last_fat;
 
   last_fat = d.fat;
