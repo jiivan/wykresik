@@ -105,10 +105,19 @@ d3.csv("Withings.csv", type, function(error, data) {
   }, 1000);
 });
 
+var last_fat = 0;
+var last_weight = 0;
+
 function type(d) {
   d.date = formatDate.parse(d.date);
   d.weight = +d.weight;
+  if (d.weight <= 0) d.weight = last_weight;
   d.fat = +d.fat;
+  if (d.fat <= 0) d.fat = last_fat;
+
+  last_fat = d.fat;
+  last_weight = d.weight;
+
   return d;
 }
 
