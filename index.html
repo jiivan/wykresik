@@ -25,8 +25,42 @@ body {
 
 </style>
 <body>
+<input type="file" name="file" />
+<ol id="list"></ol>
+
+
+
+<!--
 <script src="https://d3js.org/d3.v3.min.js"></script>
-<script>
+-->
+<script src="https://d3js.org/d3.v3.js"></script>
+
+<script type="text/javascript">
+handle_file = function() {
+    var input = d3.select(this).remove();
+    var files = this.files; // FileList
+    var l_dbg = d3.select('#list');
+    for (var i=0, fmeta; fmeta=files[i]; i++) {
+        l_dbg.append('li').text(fmeta.name + ' ' + fmeta.size + ' ' + fmeta.type);
+        // fmeta.size; // bytes
+        // fmeta.type; // mime
+        if (!fmeta.type.match('text/.*')) { // probably text/csv would be enough
+            continue;
+        };
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var csv_string = e.target.result;
+            l_dbg.append('li').text('read '+ csv_string.length/1024.0 + 'kB');
+            process_csv_array(d3.csv.parse(csv_string, type));
+            l_dbg.append('li').text('parsed');
+        };
+
+        reader.readAsText(fmeta);
+    };
+};
+d3.select('input[name=file]').on('change', handle_file);
+
+// *********
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
     width = 960 - margin.left - margin.right,
@@ -87,7 +121,6 @@ var render_seven = function(data, last_transition, first_idx, previous_idx) {
       if (first_idx > 0 && data[current_idx].date.getTime() < previous_last_day.getTime()) return true;
       last_transition = make_transition(current_idx);
   });
-  console.log('previous_idx: %o first_idx: %o next_idx: %o', previous_idx, first_idx, next_idx);
   return [last_transition, next_idx];
 }
 var render = function(data) {
@@ -112,6 +145,12 @@ var render = function(data) {
 d3.csv("Withings.csv", type, function(error, data) {
   if (error) throw error;
 
+  return; //xxx
+
+  process_csv_array(data);
+});
+
+var process_csv_array = function(data) {
   x.domain(d3.extent(data, function(d) { return d.weight; }));
   y.domain(d3.extent(data, function(d) { return d.fat; }));
 
@@ -138,7 +177,7 @@ d3.csv("Withings.csv", type, function(error, data) {
 
   data.sort(function(d) { return d.date; });
   render(data);
-});
+};
 
 var last_fat = 0;
 var last_weight = 0;
@@ -157,3 +196,4 @@ function type(d) {
 }
 
 </script>
+</body>
