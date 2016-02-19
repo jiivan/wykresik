@@ -24,9 +24,12 @@ d3.select('input[name=file]').on('change', handle_file);
 
 // *********
 
+var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+    width = w - margin.left - margin.right,
+    height = h - margin.top - margin.bottom;
 
 var formatDate = d3.time.format("%Y-%m-%d %I:%M %p");
 
