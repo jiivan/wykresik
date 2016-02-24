@@ -52,7 +52,7 @@ var line = d3.svg.line()
     .y(function(d) { return y(d.fat); });
 
 var title = d3.select("body").append("h2")
-    .text("Wykresik");
+    .text("Chart");
 
 var svg = d3.select("body").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -61,22 +61,32 @@ var svg = d3.select("body").append("svg")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 var path = null;
+var step_axis = d3.svg.axis().orient("top").ticks(4);
+var slider_step = d3.select("#slider_step").call(d3.slider().value(100).min(1).max(200).step(1).axis(step_axis).on("slide", function(e, v) {
+    d3.select(".slider_step_value").text(v);
+}));
+var slider_length = d3.select("#slider_length").call(d3.slider().value(7).min(1).max(7).step(1).axis(true).on("slide", function(e, v) {
+    d3.select(".slider_length_value").text(v);
+}));
 
 var render_seven = function(data, last_transition, first_idx, previous_idx) {
   console.log('render_seven(%o, %o)', first_idx, previous_idx);
   var first_day = data[first_idx].date
+  var duration = 360;
+  var length = 7;
   var next_day = d3.time.day.offset(first_day, 1);
-  var last_day = d3.time.week.offset(first_day, 1);
+  var last_day = d3.time.day.offset(first_day, length);
   var previous_last_day = d3.time.day.offset(last_day, -1);
   var next_idx = null;
   var make_transition = function(current_idx) {
-      if ((current_idx - previous_idx > 10) && previous_idx < first_idx) previous_idx++;
+      if ((current_idx - previous_idx > 3) && previous_idx < first_idx) previous_idx ++;
       var current_data = data.map(function(d, idx) {
         if (idx < previous_idx) return data[previous_idx];
         if (idx > current_idx) return data[current_idx];
         return d;
       });
       last_transition = last_transition.transition()
+          .duration(duration)
           .attr("d", line(current_data))
       return last_transition;
   };
@@ -102,7 +112,10 @@ var render = function(data) {
       previous_idx = first_idx;
       first_idx = result[1];
       if (first_idx === null) return;
-      if (first_idx < data.length) setTimeout(render_tick, 1000);
+      if (first_idx < data.length) last_transition.each("end", function() {
+          d3.select('#list').append('li').text("last transition ends <" + previous_idx + "," + first_idx + ">");
+          render_tick();
+      });
   };
   render_tick();
 };
