@@ -62,42 +62,13 @@ var svg = d3.select("body").append("svg")
 
 var path = null;
 var step_axis = d3.svg.axis().orient("top").ticks(4);
-var slider_step = d3.select("#slider_step").call(d3.slider().value(100).min(1).max(200).step(1).axis(step_axis).on("slide", function(e, v) {
+var slider_step = d3.select("#slider_step").call(d3.slider().value(100).min(1).max(500).step(1).axis(step_axis).on("slide", function(e, v) {
     d3.select(".slider_step_value").text(v);
 }));
 var slider_length = d3.select("#slider_length").call(d3.slider().value(7).min(1).max(7).step(1).axis(true).on("slide", function(e, v) {
     d3.select(".slider_length_value").text(v);
 }));
 
-var render_seven = function(data, last_transition, first_idx, previous_idx) {
-  console.log('render_seven(%o, %o)', first_idx, previous_idx);
-  var first_day = data[first_idx].date
-  var duration = 360;
-  var length = 7;
-  var next_day = d3.time.day.offset(first_day, 1);
-  var last_day = d3.time.day.offset(first_day, length);
-  var previous_last_day = d3.time.day.offset(last_day, -1);
-  var next_idx = null;
-  var make_transition = function(current_idx) {
-      if ((current_idx - previous_idx > 3) && previous_idx < first_idx) previous_idx ++;
-      var current_data = data.map(function(d, idx) {
-        if (idx < previous_idx) return data[previous_idx];
-        if (idx > current_idx) return data[current_idx];
-        return d;
-      });
-      last_transition = last_transition.transition()
-          .duration(duration)
-          .attr("d", line(current_data))
-      return last_transition;
-  };
-  d3.range(first_idx, data.length).forEach(function(current_idx) {
-      if (data[current_idx].date.getTime() > last_day.getTime()) return false;
-      if (next_idx === null && data[current_idx].date.getTime() >= next_day.getTime()) next_idx = current_idx;
-      if (first_idx > 0 && data[current_idx].date.getTime() < previous_last_day.getTime()) return true;
-      last_transition = make_transition(current_idx);
-  });
-  return [last_transition, next_idx];
-}
 var render = function(data) {
   var last_transition = path.transition()
     .delay(10)
@@ -107,11 +78,31 @@ var render = function(data) {
   var first_idx = 0;
   var previous_idx = first_idx;
   var render_tick = function() {
-      var result = render_seven(data, last_transition, first_idx, previous_idx);
-      last_transition = result[0];
-      previous_idx = first_idx;
-      first_idx = result[1];
-      if (first_idx === null) return;
+
+      // render7
+      var duration = +d3.select(".slider_step_value").text();
+      var length = +d3.select(".slider_length_value").text();
+      var max_previous_day = d3.time.day.offset(data[first_idx].date, length*-1);
+      var make_transition = function(current_idx) {
+          var current_data = data.map(function(d, idx) {
+            if (idx < previous_idx) return data[previous_idx];
+            if (idx > current_idx) return data[current_idx];
+            return d;
+          });
+          last_transition = last_transition.transition()
+              .duration(duration)
+              .attr("d", line(current_data))
+          return last_transition;
+      };
+      while ((first_idx - previous_idx > 3) && (previous_idx < first_idx) && (data[previous_idx].date.getTime() < max_previous_day.getTime())) {
+          // catch up with head
+          previous_idx ++;
+          last_transition = make_transition(first_idx);
+      };
+      last_transition = make_transition(first_idx);
+      // eo render7
+
+      first_idx++
       if (first_idx < data.length) last_transition.each("end", function() {
           d3.select('#list').append('li').text("last transition ends <" + previous_idx + "," + first_idx + ">");
           render_tick();
@@ -119,14 +110,6 @@ var render = function(data) {
   };
   render_tick();
 };
-
-d3.csv("Withings.csv", type, function(error, data) {
-  if (error) throw error;
-
-  return; //xxx
-
-  process_csv_array(data);
-});
 
 var process_csv_array = function(data) {
   x.domain(d3.extent(data, function(d) { return d.weight; }));
