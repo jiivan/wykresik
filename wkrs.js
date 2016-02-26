@@ -96,7 +96,7 @@ var render = function(data) {
       };
       while ((first_idx - previous_idx > 3) && (previous_idx < first_idx) && (data[previous_idx].date.getTime() < max_previous_day.getTime())) {
           // catch up with head
-          previous_idx ++;
+          previous_idx++;
           last_transition = make_transition(first_idx);
       };
       last_transition = make_transition(first_idx);
