@@ -24,8 +24,8 @@ d3.select('input[name=file]').on('change', handle_file);
 
 // *********
 
-var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) * 0.8;
+var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) * 0.8;
 
 var margin = {top: 20, right: 20, bottom: 30, left: 50},
     width = w - margin.left - margin.right,
@@ -114,6 +114,26 @@ var render = function(data) {
 var process_csv_array = function(data) {
   x.domain(d3.extent(data, function(d) { return d.weight; }));
   y.domain(d3.extent(data, function(d) { return d.fat; }));
+
+  var bars_cnt = 5;
+  var bars_data = d3.range(bars_cnt).map(function(i) {
+      var val_x = i * (x.domain()[1] - x.domain()[0])/bars_cnt + x.domain()[0];
+      var val_y = i * (y.domain()[1] - y.domain()[0])/bars_cnt + y.domain()[0];
+      val_y = y.domain()[1];
+      var color = i%2 ? "papayawhip" : "mediumvioletred";
+      return [val_x, val_y, color]
+  });
+  var bars = svg.selectAll(".bar").data(bars_data).enter()
+      .append("g")
+      .attr("transform", "skewX(-45)")
+      .attr("class", "bar");
+  bars.append("rect")
+      .attr("x", function(d) { return x(d[0]); })
+      .attr("y", function(d) { return y(d[1]); })
+      .attr("width", w/bars_cnt)
+      .attr("height", h)
+      .attr("fill-opacity", 3e-2)
+      .attr("fill", function(d) {return d[2]; });
 
   svg.append("g")
       .attr("class", "x axis")
