@@ -156,7 +156,7 @@ var process_csv_array = function(data) {
         .attr("class", "line")
         .attr("d", line);
 
-  data.sort(function(d) { return d.date.getTime(); });
+  data.sort(function(a, b) { return a.date.getTime()-b.date.getTime(); });
   render(data);
 };
 
