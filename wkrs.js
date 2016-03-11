@@ -66,10 +66,19 @@ var svg = d3.select("body").append("svg")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 var path = svg.append("path")
-        .datum([])
-        .attr("class", "line")
-        .attr("d", line);
+    .datum([])
+    .attr("class", "line")
+    .attr("d", line);
+var dot = svg.append("circle")
+    .attr("r", "10")
+    .attr("cx", 30)
+    .attr("cy", 30)
+    .style("stroke", "black")
+    .style("stroke-width", 3)
+    .style("fill", "green");
 var pathlines = [];
+var pathlines_to_close = [];
+var pathlines_closing = false;
 
 var step_axis = d3.svg.axis().orient("top").ticks(4);
 var slider_step = d3.select("#slider_step").call(d3.slider().value(100).min(1).max(500).step(1).axis(step_axis).on("slide", function(e, v) {
@@ -80,78 +89,100 @@ var slider_length = d3.select("#slider_length").call(d3.slider().value(7).min(1)
 }));
 
 var render = function(data) {
-  var last_transition = path.transition()
-    .delay(10)
-    .duration(160)
-    .ease("linear");
+    /*
+    var last_transition = path.transition()
+      .delay(10)
+      .duration(160)
+      .ease("linear");
+    */
+    var last_transition = dot.transition();
+    var p_transition;
 
-  var first_idx = 0;
-  var previous_idx = first_idx;
-  var render_tick = function() {
+    var first_idx = 0;
+    var previous_idx = first_idx;
+    var render_tick = function() {
+        // render7
+        var duration = +d3.select(".slider_step_value").text();
+        var length = +d3.select(".slider_length_value").text();
+        var max_previous_day = d3.time.day.offset(data[first_idx].date, length*-1);
+        var make_transition = function(current_idx) {
+            var current_data = data.map(function(d, idx) {
+              if (idx < previous_idx) return data[previous_idx];
+              if (idx > current_idx) return data[current_idx];
+              return d;
+            });
+            last_transition = last_transition.transition()
+                .duration(duration)
+                .attr("d", line(current_data))
+            return last_transition;
+        };
+        var make_transition_line = function(current_idx) {
+            if (current_idx < 1) return last_transition; // no previous point
+            current_data = data.filter(function(d, idx) {
+              if (idx > current_idx) return false;
+              return (current_idx - idx) <= 1;
+            });
+            var color = d3.hsl(color_h(current_idx), 0.51, color_v(current_idx));
+            var pathline =  svg.append("path")
+                .datum([])
+                .attr("class", "pathline")
+                .attr("d", line([current_data[0], current_data[0]]));
+            p_transition = pathline.transition()
+                .duration(duration)
+                .attr('d', line(current_data))
+                .style('stroke', color.toString());
+            pathlines.push([data[current_idx].date, pathline, line([current_data[1], current_data[1]])]);
+            while (pathlines.length && pathlines[0][0].getTime() < max_previous_day.getTime())
+                pathlines_to_close.push(pathlines.shift());
+            last_transition = last_transition.transition()
+                .duration(duration/2)
+                .style("opacity", 0.8)
+                .transition()
+                .style("opacity", 1);
+            return last_transition;
+        };
+        /*
+        while ((first_idx - previous_idx > 3) && (previous_idx < first_idx) && (data[previous_idx].date.getTime() < max_previous_day.getTime())) {
+            // catch up with head
+            previous_idx++;
+            last_transition = make_transition(first_idx);
+        };
+        last_transition = make_transition(first_idx);
+        */
+        last_transition = make_transition_line(first_idx);
+        // eo render7
 
-      // render7
-      var duration = +d3.select(".slider_step_value").text();
-      var length = +d3.select(".slider_length_value").text();
-      var max_previous_day = d3.time.day.offset(data[first_idx].date, length*-1);
-      var make_transition = function(current_idx) {
-          var current_data = data.map(function(d, idx) {
-            if (idx < previous_idx) return data[previous_idx];
-            if (idx > current_idx) return data[current_idx];
-            return d;
-          });
-          last_transition = last_transition.transition()
-              .duration(duration)
-              .attr("d", line(current_data))
-          return last_transition;
-      };
-      var make_transition_line = function(current_idx) {
-          if (current_idx < 1) return last_transition; // no previous point
-          current_data = data.filter(function(d, idx) {
-            if (idx > current_idx) return false;
-            return (current_idx - idx) <= 1;
-          });
-          var color = d3.hsl(color_h(current_idx), 0.51, color_v(current_idx));
-          var pathline =  svg.append("path")
-              .datum([])
-              .attr("class", "pathline")
-              .attr("d", line([current_data[0], current_data[0]]));
-          pathline.transition()
-              .duration(duration)
-              .attr('d', line(current_data))
-              .style('stroke', color.toString())
-              .transition()
-              .duration(duration*4)
-              .attr('d', line([current_data[1], current_data[1]]))
-              .remove();
-          last_transition = last_transition.transition()
-              .duration(duration/4)
-              .attr("d", line([data[0], data[0]]))
-              .transition()
-              .attr("d", line([data[0], data[data.length-1]]))
-              .transition()
-              .attr("d", line([data[data.length-1], data[data.length-1]]))
-              .transition()
-              .attr("d", line([data[data.length-1], data[0]]))
-          return last_transition;
-      };
-      /*
-      while ((first_idx - previous_idx > 3) && (previous_idx < first_idx) && (data[previous_idx].date.getTime() < max_previous_day.getTime())) {
-          // catch up with head
-          previous_idx++;
-          last_transition = make_transition(first_idx);
-      };
-      last_transition = make_transition(first_idx);
-      */
-      last_transition = make_transition_line(first_idx);
-      // eo render7
-
-      first_idx++
-      if (first_idx < data.length) last_transition.each("end", function() {
-          d3.select('#list').append('li').text("last transition ends <" + previous_idx + "," + first_idx + ">");
-          render_tick();
-      });
-  };
-  render_tick();
+        first_idx++
+        if (first_idx < data.length) last_transition.each("end", function() {
+            d3.select('#list').append('li').text("last transition ends <" + previous_idx + "," + first_idx + ">");
+            render_tick();
+            close_pathline();
+        });
+    };
+    var close_pathline = function() {
+        if (pathlines_closing) return;
+        pathlines_closing = true;
+        var elem = pathlines_to_close.shift();
+        if (elem === undefined) {
+            pathlines_closing = false;
+            return; // empty
+        }
+        var duration = +d3.select(".slider_step_value").text();
+        try {
+            elem[1].transition()
+                .duration(duration/4)
+                .attr("d", elem[2])
+                .each("end", function() {
+                    d3.select(this).remove();
+                    pathlines_closing = false;
+                    close_pathline();
+                });
+        } catch(e) {
+            console.error("error in transition close: %o", e);
+            pathlines_closing = false;
+        }
+    }
+    render_tick();
 };
 
 var process_csv_array = function(data) {
