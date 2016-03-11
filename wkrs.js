@@ -39,6 +39,11 @@ var x = d3.scale.linear()
 var y = d3.scale.linear()
     .range([height, 0]);
 
+var color_v = d3.scale.linear()
+    .range([0.5, 1]);
+var color_h = d3.scale.linear()
+    .range([0, 360]);
+
 var xAxis = d3.svg.axis()
     .scale(x)
     .orient("bottom");
@@ -60,7 +65,12 @@ var svg = d3.select("body").append("svg")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-var path = null;
+var path = svg.append("path")
+        .datum([])
+        .attr("class", "line")
+        .attr("d", line);
+var pathlines = [];
+
 var step_axis = d3.svg.axis().orient("top").ticks(4);
 var slider_step = d3.select("#slider_step").call(d3.slider().value(100).min(1).max(500).step(1).axis(step_axis).on("slide", function(e, v) {
     d3.select(".slider_step_value").text(v);
@@ -94,12 +104,45 @@ var render = function(data) {
               .attr("d", line(current_data))
           return last_transition;
       };
+      var make_transition_line = function(current_idx) {
+          if (current_idx < 1) return last_transition; // no previous point
+          current_data = data.filter(function(d, idx) {
+            if (idx > current_idx) return false;
+            return (current_idx - idx) <= 1;
+          });
+          var color = d3.hsl(color_h(current_idx), 0.51, color_v(current_idx));
+          var pathline =  svg.append("path")
+              .datum([])
+              .attr("class", "pathline")
+              .attr("d", line([current_data[0], current_data[0]]));
+          pathline.transition()
+              .duration(duration)
+              .attr('d', line(current_data))
+              .style('stroke', color.toString())
+              .transition()
+              .duration(duration*4)
+              .attr('d', line([current_data[1], current_data[1]]))
+              .remove();
+          last_transition = last_transition.transition()
+              .duration(duration/4)
+              .attr("d", line([data[0], data[0]]))
+              .transition()
+              .attr("d", line([data[0], data[data.length-1]]))
+              .transition()
+              .attr("d", line([data[data.length-1], data[data.length-1]]))
+              .transition()
+              .attr("d", line([data[data.length-1], data[0]]))
+          return last_transition;
+      };
+      /*
       while ((first_idx - previous_idx > 3) && (previous_idx < first_idx) && (data[previous_idx].date.getTime() < max_previous_day.getTime())) {
           // catch up with head
           previous_idx++;
           last_transition = make_transition(first_idx);
       };
       last_transition = make_transition(first_idx);
+      */
+      last_transition = make_transition_line(first_idx);
       // eo render7
 
       first_idx++
@@ -114,6 +157,8 @@ var render = function(data) {
 var process_csv_array = function(data) {
   x.domain(d3.extent(data, function(d) { return d.weight; }));
   y.domain(d3.extent(data, function(d) { return d.fat; }));
+  color_v.domain([0, data.length]);
+  color_h.domain(color_v.domain());
 
   var bars_cnt = 5;
   var bars_data = d3.range(bars_cnt).map(function(i) {
@@ -149,12 +194,6 @@ var process_csv_array = function(data) {
       .attr("dy", ".71em")
       .style("text-anchor", "end")
       .text("Fat (%)");
-
-  path =
-    svg.append("path")
-        .datum([])
-        .attr("class", "line")
-        .attr("d", line);
 
   data.sort(function(a, b) { return a.date.getTime()-b.date.getTime(); });
   render(data);

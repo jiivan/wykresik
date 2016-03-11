@@ -18,3 +18,9 @@ body {
   stroke: steelblue;
   stroke-width: 1.5px;
 }
+
+.pathline {
+  fill: none;
+  stroke: peru;
+  stroke-width: 2.3px;
+}
