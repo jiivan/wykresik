@@ -102,7 +102,6 @@ var render = function(data) {
     var previous_idx = first_idx;
     var render_tick = function() {
         // render7
-        var duration = +d3.select(".slider_step_value").text();
         var length = +d3.select(".slider_length_value").text();
         var max_previous_day = d3.time.day.offset(data[first_idx].date, length*-1);
         var make_transition = function(current_idx) {
@@ -122,20 +121,22 @@ var render = function(data) {
               if (idx > current_idx) return false;
               return (current_idx - idx) <= 1;
             });
+            time_delta = data[current_idx].date.getTime() - data[current_idx-1].date.getTime();
+            var t_duration = transition_duration(time_delta);
             var color = d3.hsl(color_h(current_idx), 0.51, color_v(current_idx));
             var pathline =  svg.append("path")
                 .datum([])
                 .attr("class", "pathline")
                 .attr("d", line([current_data[0], current_data[0]]));
             p_transition = pathline.transition()
-                .duration(duration)
+                .duration(t_duration)
                 .attr('d', line(current_data))
                 .style('stroke', color.toString());
-            pathlines.push([data[current_idx].date, pathline, line([current_data[1], current_data[1]])]);
+            pathlines.push([data[current_idx].date, pathline, line([current_data[1], current_data[1]]), time_delta]);
             while (pathlines.length && pathlines[0][0].getTime() < max_previous_day.getTime())
                 pathlines_to_close.push(pathlines.shift());
             last_transition = last_transition.transition()
-                .duration(duration/2)
+                .duration(t_duration/2)
                 .style("opacity", 0.8)
                 .transition()
                 .style("opacity", 1);
@@ -159,6 +160,12 @@ var render = function(data) {
             close_pathline();
         });
     };
+
+    var transition_duration = function(time_delta) {
+        var duration = +d3.select(".slider_step_value").text();
+        return (time_delta*0.0023) * duration / 3600
+    };
+
     var close_pathline = function() {
         if (pathlines_closing) return;
         pathlines_closing = true;
@@ -167,10 +174,9 @@ var render = function(data) {
             pathlines_closing = false;
             return; // empty
         }
-        var duration = +d3.select(".slider_step_value").text();
         try {
             elem[1].transition()
-                .duration(duration/4)
+                .duration(transition_duration(elem[3])/4)
                 .attr("d", elem[2])
                 .each("end", function() {
                     d3.select(this).remove();
