@@ -137,10 +137,10 @@ var render = function(data) {
                 pathlines_to_close.push(pathlines.shift());
             last_transition = last_transition.transition()
                 .duration(t_duration/2)
-                .style("opacity", 0.8)
+                .style("opacity", 0.2)
                 .transition()
                 .style("opacity", 1);
-            return last_transition;
+            return p_transition;
         };
         /*
         while ((first_idx - previous_idx > 3) && (previous_idx < first_idx) && (data[previous_idx].date.getTime() < max_previous_day.getTime())) {
@@ -150,7 +150,7 @@ var render = function(data) {
         };
         last_transition = make_transition(first_idx);
         */
-        last_transition = make_transition_line(first_idx);
+        make_transition_line(first_idx);
         // eo render7
 
         first_idx++
