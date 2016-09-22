@@ -69,7 +69,7 @@ def withings_comeback():
         with db_conn.cursor() as c:
             c.execute('UPDATE withings_credentials SET wuserid=%s WHERE token=%s', (creds.user_id, oauth_token))
     store_measures(creds)
-    redirect('http://wykresik.genoomy.com/?withings=%d' % (creds.user_id,))
+    redirect('http://wykresik.genoomy.com/?withings=%d' % (int(creds.user_id),))
 
 @route('/withings/csv/<userid>')
 def withings_csv(userid):
