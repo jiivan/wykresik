@@ -1,4 +1,5 @@
 import csv
+from bottle import default_app
 from bottle import redirect
 from bottle import request
 from bottle import response
@@ -97,4 +98,6 @@ def withings_csv(userid):
     return csvfile.read()
 
 if __name__ == '__main__':
-        run(host='localhost', port=8080, debug=True)
+    run(host='localhost', port=8080, debug=True)
+else:
+    application = default_app()
