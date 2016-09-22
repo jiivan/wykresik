@@ -22,6 +22,25 @@ handle_file = function() {
 };
 d3.select('input[name=file]').on('change', handle_file);
 
+var handle_query = function() {
+    if (window.location.search.match(/(\?|&)withings=\d+/)) {
+        var l_dbg = d3.select('#list');
+        try {
+            var userid = window.location.search.match(/(\?|&)withings=\d+/)[0].split('=')[1];
+            var url = '/withings/csv/'+userid
+        } catch(e) {
+            l_dbg.append('li').text('handle_query err: '+e);
+            return;
+        }
+        l_dbg.append('li').text('Fetching csv: '+url);
+        d3.csv(url, type, function(error, data) {
+            if (error) throw error;
+            process_csv_array(data);
+        });
+    }
+};
+handle_query()
+
 // *********
 
 var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0) * 0.8;
