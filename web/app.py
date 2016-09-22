@@ -100,10 +100,10 @@ def withings_table():
     db_operations_start = time.time()
     with db_connection() as db_conn:
         with db_conn.cursor() as c:
-            c.execute('SELECT * FROM withings_maxminfive ORDER BY justday, wuserid;')
+            c.execute('SELECT * FROM withings_maxminfive ORDER BY justday DESC, wuserid;')
             maxminfive = c.fetchall()
         with db_conn.cursor() as c:
-            c.execute('SELECT * FROM withings_maxminfive_tf ORDER BY justday, wuserid;')
+            c.execute('SELECT * FROM withings_maxminfive_tf ORDER BY justday DESC, wuserid;')
             maxminfive_24h = c.fetchall()
     db_operations_delta = time.time() - db_operations_start
     return {
