@@ -1,0 +1,2 @@
+psycopg2
+git+https://github.com/maximebf/python-withings.git@6552ff9217604383b6826bca00f0aef2732554f4
