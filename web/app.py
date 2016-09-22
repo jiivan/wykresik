@@ -6,6 +6,7 @@ from bottle import response
 from bottle import route
 from bottle import run
 from bottle import view
+import itertools
 import psycopg2
 import psycopg2.extras
 from withings import WithingsAuth, WithingsApi
@@ -105,6 +106,30 @@ def withings_table():
         with db_conn.cursor() as c:
             c.execute('SELECT * FROM withings_maxminfive_tf ORDER BY justday DESC, wuserid;')
             maxminfive_24h = c.fetchall()
+    userdates = frozenset((r['wuserid'], r['justday'].replace(tzinfo=None)) for r in itertools.chain(maxminfive, maxminfive_24h))
+
+    def _fillnulls(data):
+        sdates = list(sorted(userdates, key=lambda r: (r[1], r[0]*-1)))
+        if not sdates:
+            return data
+        result = []
+        wuserid, justday = sdates.pop()
+        for row in data:
+            while (justday, wuserid*-1) > (row['justday'].replace(tzinfo=None), row['wuserid']*-1):
+                result.append({'wuserid': wuserid, 'justday': justday, 'maxminfive': None})
+                if not sdates:
+                    break
+                wuserid, justday = sdates.pop()
+            if sdates:
+                if (wuserid, justday) == (row['wuserid'], row['justday'].replace(tzinfo=None)):
+                    wuserid, justday = sdates.pop()
+            result.append(row)
+        return result
+
+
+    maxminfive = _fillnulls(maxminfive)
+    maxminfive_24h = _fillnulls(maxminfive_24h)
+
     db_operations_delta = time.time() - db_operations_start
     return {
         'maxminfive': maxminfive,
