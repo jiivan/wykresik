@@ -5,22 +5,18 @@ from bottle import request
 from bottle import response
 from bottle import route
 from bottle import run
+from bottle import view
 import psycopg2
 import psycopg2.extras
 from withings import WithingsAuth, WithingsApi
 
 import settings
+import time
 
 
 def db_connection():
     return psycopg2.connect(settings.DATABASE, cursor_factory=psycopg2.extras.DictCursor)
 
-
-# withings_credentials
-# created_at
-# token
-# secret
-# wuserid
 
 def get_authorizer(token=None):
     auth = WithingsAuth(settings.WITHINGS['key'], settings.WITHINGS['secret'], 'http://wykresik.genoomy.com/withings/comeback')
@@ -96,6 +92,26 @@ def withings_csv(userid):
     csvfile.seek(0)
     response.content_type = 'text/plain'
     return csvfile.read()
+
+
+@route('/withings/table')
+@view('withings_table')
+def withings_table():
+    db_operations_start = time.time()
+    with db_connection() as db_conn:
+        with db_conn.cursor() as c:
+            c.execute('SELECT * FROM withings_maxminfive ORDER BY justday, wuserid;')
+            maxminfive = c.fetchall()
+        with db_conn.cursor() as c:
+            c.execute('SELECT * FROM withings_maxminfive_tf ORDER BY justday, wuserid;')
+            maxminfive_24h = c.fetchall()
+    db_operations_delta = time.time() - db_operations_start
+    return {
+        'maxminfive': maxminfive,
+        'maxminfive_24h': maxminfive_24h,
+        'db_delta': db_operations_delta,
+    }
+
 
 if __name__ == '__main__':
     run(host='localhost', port=8080, debug=True)
