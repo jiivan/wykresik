@@ -24,6 +24,31 @@ var draw_line = function(chart_data, color) {
 };
 
 
+var draw_grid = function() {
+    var step = 20;
+    for (var i=0; i<(height/step); i++) {
+        svg.append('line')
+            .attr('stroke', 'lightgrey')
+            .attr('x1', 10)
+            .attr('y1', 10)
+            .attr('x2', width)
+            .attr('y2', 10)
+            .attr('transform', 'translate(0,'+step*i+')');
+    }
+    for (var i=0; i<(width/step); i++) {
+        svg.append('line')
+            .attr('stroke', 'lightgrey')
+            .attr('x1', 10)
+            .attr('y1', 10)
+            .attr('x2', 10)
+            .attr('y2', height)
+            .attr('transform', 'translate('+step*i+', 0)');
+    }
+};
+
+draw_grid();
+
+
 var process_chart_data = function(selection, key) {
     selection.select(function() {
         var wdate = d3.timeParse("%Y-%m-%d")(this.getAttribute('data-wdate'));
