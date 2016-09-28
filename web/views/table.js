@@ -14,7 +14,13 @@ var draw_line = function(chart_data, color) {
         .attr('d', line_func(chart_data))
         .attr('stroke', color)
         .attr('stroke-width', '2')
-        .attr('fill', 'none');
+        .attr('fill', 'none')
+        .on('mouseover', function() {
+            d3.select(this).attr('stroke-width', '3').attr('stroke', d3.color(color).brighter(3));
+        })
+        .on('mouseout', function() {
+            d3.select(this).attr('stroke-width', '2').attr('stroke', color);
+        });
 };
 
 
