@@ -1,13 +1,13 @@
 var users = {};
 var x = d3.scaleTime();
 var y = d3.scaleLinear();
-var xAxis = d3.axisBottom()
-    .scale(x)
-var yAxis = d3.axisLeft()
-    .scale(y)
 
 
 var svg = d3.select('#tableChart');
+var width = 1000;
+var height = 500;
+var margin_left = 40;
+var margin_bottom = 20;
 var line_func = d3.line().x(function(d) { return x(d.date); }).y(function(d) { return y(d.v); });
 var draw_line = function(chart_data, color) {
     svg.append('path')
@@ -33,18 +33,25 @@ var process_chart_data = function(selection, key) {
 process_chart_data(d3.selectAll('.chart-data .classic span'), 'classic');
 process_chart_data(d3.selectAll('.chart-data .twentyfour span'), 'twentyfour');
 
+var mdata = [];
 for (wuserid in users) {
-    x
-        .range([0,1000])
-        .domain(d3.extent(users[wuserid]['classic'], function(d) { return d.date; }));
-    y
-        .range([0,500])
-        .domain(d3.extent(users[wuserid]['classic'], function(d) { return d.v; }));
-    break;
+    var muser = d3.merge([users[wuserid]['classic'], users[wuserid]['twentyfour']]);
+    mdata = d3.merge([mdata, muser]);
 }
+x
+    .range([margin_left,width])
+    .domain(d3.extent(mdata, function(d) { return d.date; }));
+y
+    .range([height-margin_bottom,margin_bottom])
+    .domain(d3.extent(mdata, function(d) { return d.v; }));
 
 
 for (wuserid in users) {
     draw_line(users[wuserid]['classic'], 'blue');
     draw_line(users[wuserid]['twentyfour'], 'green');
 }
+
+var xAxis = d3.axisBottom(x).ticks(d3.timeWeek.every(5));
+var yAxis = d3.axisLeft(y).ticks(15);
+svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis);
+svg.append('g').attr('transform', 'translate('+margin_left+', 0)').call(yAxis);
