@@ -24,31 +24,6 @@ var draw_line = function(chart_data, color) {
 };
 
 
-var draw_grid = function() {
-    var step = 20;
-    for (var i=0; i<(height/step); i++) {
-        svg.append('line')
-            .attr('stroke', 'lightgrey')
-            .attr('x1', 10)
-            .attr('y1', 10)
-            .attr('x2', width)
-            .attr('y2', 10)
-            .attr('transform', 'translate(0,'+step*i+')');
-    }
-    for (var i=0; i<(width/step); i++) {
-        svg.append('line')
-            .attr('stroke', 'lightgrey')
-            .attr('x1', 10)
-            .attr('y1', 10)
-            .attr('x2', 10)
-            .attr('y2', height)
-            .attr('transform', 'translate('+step*i+', 0)');
-    }
-};
-
-draw_grid();
-
-
 var process_chart_data = function(selection, key) {
     selection.select(function() {
         var wdate = d3.timeParse("%Y-%m-%d")(this.getAttribute('data-wdate'));
@@ -89,5 +64,32 @@ for (wuserid in users) {
 var xAxis = d3.axisBottom(x).ticks(d3.timeMonday.every(1));
 yticks = Math.round(y.domain()[1] - y.domain()[0])*2
 var yAxis = d3.axisLeft(y).ticks(yticks);
-svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis);
-svg.append('g').attr('transform', 'translate('+margin_left+', 0)').call(yAxis);
+
+
+var draw_grid = function(selection, orientation) {
+    console.log('draw_grid %o', selection);
+    selection.selectAll("g.tick").select(function() {
+        var dthis = d3.select(this);
+        if (orientation == "horizontal") {
+            svg.append('line')
+                .attr('stroke', 'lightgrey')
+                .attr('x1', 0)
+                .attr('y1', height)
+                .attr('x2', 0)
+                .attr('y2', 0)
+                .attr('transform', dthis.attr('transform'));
+        } else if (orientation == "vertical") {
+            svg.append('line')
+                .attr('stroke', 'lightgrey')
+                .attr('x1', 0)
+                .attr('y1', 0)
+                .attr('x2', width)
+                .attr('y2', 0)
+                .attr('transform', dthis.attr('transform'));
+        }
+    });
+};
+
+
+svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis).call(draw_grid, "horizontal");
+svg.append('g').attr('transform', 'translate('+margin_left+', 0)').call(yAxis).call(draw_grid, "vertical");
