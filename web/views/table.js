@@ -63,6 +63,8 @@ var process_chart_data = function(selection, key) {
 
 process_chart_data(d3.selectAll('.chart-data .classic span'), 'classic');
 process_chart_data(d3.selectAll('.chart-data .twentyfour span'), 'twentyfour');
+var first_date = d3.timeParse("%Y-%m-%d")(d3.select('.chart-data').attr('data-first-date'));
+var last_date = d3.timeParse("%Y-%m-%d")(d3.select('.chart-data').attr('data-last-date'));
 
 var mdata = [];
 for (wuserid in users) {
@@ -71,7 +73,8 @@ for (wuserid in users) {
 }
 x
     .range([margin_left,width])
-    .domain(d3.extent(mdata, function(d) { return d.date; }));
+    .domain([first_date, last_date]);
+    //.domain(d3.extent(mdata, function(d) { return d.date; }));
 y
     .range([height-margin_bottom,margin_bottom])
     .domain(d3.extent(mdata, function(d) { return d.v; }));

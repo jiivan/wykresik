@@ -1,4 +1,3 @@
-import csv
 from bottle import default_app
 from bottle import redirect
 from bottle import request
@@ -6,6 +5,8 @@ from bottle import response
 from bottle import route
 from bottle import run
 from bottle import view
+import csv
+import datetime
 import itertools
 import psycopg2
 import psycopg2.extras
@@ -96,8 +97,13 @@ def withings_csv(userid):
 
 
 @route('/withings/table')
+@route('/withings/table/<first_date:re:\d{4}\d{2}\d{2}>-<last_date:re:\d{4}\d{2}\d{2}>')
 @view('withings_table')
-def withings_table():
+def withings_table(first_date=None, last_date=None):
+    if first_date:
+        first_date = datetime.datetime.strptime(first_date, '%Y%m%d')
+    if last_date:
+        last_date = datetime.datetime.strptime(last_date, '%Y%m%d')
     db_operations_start = time.time()
     with db_connection() as db_conn:
         with db_conn.cursor() as c:
@@ -129,12 +135,18 @@ def withings_table():
 
     maxminfive = _fillnulls(maxminfive)
     maxminfive_24h = _fillnulls(maxminfive_24h)
+    if not first_date:
+        first_date = maxminfive[-1]['justday']
+    if not last_date:
+        last_date = maxminfive[0]['justday']
 
     db_operations_delta = time.time() - db_operations_start
     return {
         'maxminfive': maxminfive,
         'maxminfive_24h': maxminfive_24h,
         'db_delta': db_operations_delta,
+        'first_date': first_date,
+        'last_date': last_date,
     }
 
 

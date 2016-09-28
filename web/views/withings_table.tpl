@@ -18,7 +18,7 @@
     % include('inc_table.tpl', title='5 24h periods', data=maxminfive_24h)
     <div>&nbsp;</div>
     <span>generated in: {{ '%.3f' % db_delta }}sec.</span>
-    <div style="display: none;" class="chart-data">
+    <div style="display: none;" class="chart-data" data-first-date="{{ first_date.strftime('%Y-%m-%d') }}" data-last-date="{{ last_date.strftime('%Y-%m-%d') }}">
         <div class="classic">
             % for row in maxminfive:
                 % if row['maxminfive']:
