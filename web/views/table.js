@@ -7,7 +7,7 @@ var svg = d3.select('#tableChart');
 var width = 1000;
 var height = 500;
 var margin_left = 40;
-var margin_bottom = 20;
+var margin_bottom = 50;
 var line_func = d3.line().x(function(d) { return x(d.date); }).y(function(d) { return y(d.v); });
 var draw_line = function(chart_data, color) {
     svg.append('path')
@@ -71,25 +71,27 @@ var draw_grid = function(selection, orientation) {
     selection.selectAll("g.tick").select(function() {
         var dthis = d3.select(this);
         if (orientation == "horizontal") {
-            svg.append('line')
+            svg.insert('line', ':first-child')
                 .attr('stroke', 'lightgrey')
                 .attr('x1', 0)
                 .attr('y1', height)
                 .attr('x2', 0)
                 .attr('y2', 0)
+                .attr('opacity', 0.4)
                 .attr('transform', dthis.attr('transform'));
         } else if (orientation == "vertical") {
-            svg.append('line')
+            svg.insert('line', ':first-child')
                 .attr('stroke', 'lightgrey')
                 .attr('x1', 0)
                 .attr('y1', 0)
                 .attr('x2', width)
                 .attr('y2', 0)
+                .attr('opacity', 0.4)
                 .attr('transform', dthis.attr('transform'));
         }
     });
 };
 
 
-svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis).call(draw_grid, "horizontal");
+svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis).call(draw_grid, "horizontal").call(function(selection) { selection.selectAll("g.tick text").attr('transform', 'rotate(90) translate(25, -13)'); });
 svg.append('g').attr('transform', 'translate('+margin_left+', 0)').call(yAxis).call(draw_grid, "vertical");
