@@ -71,6 +71,7 @@ for (wuserid in users) {
     var muser = d3.merge([users[wuserid]['classic'], users[wuserid]['twentyfour']]);
     mdata = d3.merge([mdata, muser]);
 }
+mdata = mdata.filter(function(d) { return (d.date >= first_date) && (d.date <= last_date); });
 x
     .range([margin_left,width])
     .domain([first_date, last_date]);
@@ -85,7 +86,8 @@ for (wuserid in users) {
     draw_line(users[wuserid]['twentyfour'], 'green');
 }
 
-var xAxis = d3.axisBottom(x).ticks(d3.timeWeek.every(5));
-var yAxis = d3.axisLeft(y).ticks(15);
+var xAxis = d3.axisBottom(x).ticks(d3.timeMonday.every(1));
+yticks = Math.round(y.domain()[1] - y.domain()[0])*2
+var yAxis = d3.axisLeft(y).ticks(yticks);
 svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis);
 svg.append('g').attr('transform', 'translate('+margin_left+', 0)').call(yAxis);
