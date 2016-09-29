@@ -74,7 +74,7 @@ var draw_grid = function(selection, orientation) {
             svg.insert('line', ':first-child')
                 .attr('stroke', 'lightgrey')
                 .attr('x1', 0)
-                .attr('y1', height)
+                .attr('y1', height-margin_bottom)
                 .attr('x2', 0)
                 .attr('y2', 0)
                 .attr('opacity', 0.4)
@@ -82,7 +82,7 @@ var draw_grid = function(selection, orientation) {
         } else if (orientation == "vertical") {
             svg.insert('line', ':first-child')
                 .attr('stroke', 'lightgrey')
-                .attr('x1', 0)
+                .attr('x1', margin_left)
                 .attr('y1', 0)
                 .attr('x2', width)
                 .attr('y2', 0)
