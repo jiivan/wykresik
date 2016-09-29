@@ -52,7 +52,7 @@ x
     .domain([first_date, last_date]);
     //.domain(d3.extent(mdata, function(d) { return d.date; }));
 y
-    .range([height-margin_bottom,margin_bottom])
+    .range([height-margin_bottom,0])
     .domain(d3.extent(mdata, function(d) { return d.v; }));
 
 
