@@ -7,7 +7,7 @@ var svg = d3.select('#tableChart');
 var width = 1000;
 var height = 500;
 var margin_left = 40;
-var margin_bottom = 50;
+var margin_bottom = 70;
 var line_func = d3.line().x(function(d) { return x(d.date); }).y(function(d) { return y(d.v); });
 var draw_line = function(chart_data, color) {
     svg.append('path')
@@ -61,7 +61,7 @@ for (wuserid in users) {
     draw_line(users[wuserid]['twentyfour'], 'green');
 }
 
-var xAxis = d3.axisBottom(x).ticks(d3.timeMonday.every(1));
+var xAxis = d3.axisBottom(x).ticks(d3.timeMonday.every(1)).tickFormat(d3.timeFormat("%Y.%m.%d"));
 yticks = Math.round(y.domain()[1] - y.domain()[0])*2
 var yAxis = d3.axisLeft(y).ticks(yticks);
 
@@ -93,5 +93,5 @@ var draw_grid = function(selection, orientation) {
 };
 
 
-svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis).call(draw_grid, "horizontal").call(function(selection) { selection.selectAll("g.tick text").attr('transform', 'rotate(90) translate(25, -13)'); });
+svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis).call(draw_grid, "horizontal").call(function(selection) { selection.selectAll("g.tick text").attr('transform', 'rotate(90) translate(35, -14)'); });
 svg.append('g').attr('transform', 'translate('+margin_left+', 0)').call(yAxis).call(draw_grid, "vertical");
