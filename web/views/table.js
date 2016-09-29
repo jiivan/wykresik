@@ -62,7 +62,7 @@ for (wuserid in users) {
 }
 
 var xAxis = d3.axisBottom(x).ticks(d3.timeMonday.every(1)).tickFormat(d3.timeFormat("%Y.%m.%d"));
-yticks = Math.round(y.domain()[1] - y.domain()[0])*2
+yticks = Math.round(y.domain()[1] - y.domain()[0])*2 // ticki co 0.5
 var yAxis = d3.axisLeft(y).ticks(yticks);
 
 

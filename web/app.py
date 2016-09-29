@@ -113,14 +113,22 @@ def withings_table(first_date=None, last_date=None):
             c.execute('SELECT * FROM withings_maxminfive_tf ORDER BY justday DESC, wuserid;')
             maxminfive_24h = c.fetchall()
     userdates = frozenset((r['wuserid'], r['justday'].replace(tzinfo=None)) for r in itertools.chain(maxminfive, maxminfive_24h))
+    if not first_date:
+        first_date = min(maxminfive[-1]['justday'].replace(tzinfo=None), maxminfive_24h[-1]['justday'].replace(tzinfo=None))
+    if not last_date:
+        last_date = max(maxminfive[0]['justday'].replace(tzinfo=None), maxminfive_24h[0]['justday'].replace(tzinfo=None))
 
     def _fillnulls(data):
         sdates = list(sorted(userdates, key=lambda r: (r[1], r[0]*-1)))
+        while sdates and (sdates[-1][1] > last_date):
+            sdates.pop()
         if not sdates:
             return data
         result = []
         wuserid, justday = sdates.pop()
         for row in data:
+            if not (first_date <= row['justday'].replace(tzinfo=None) <= last_date):
+                continue
             while (justday, wuserid*-1) > (row['justday'].replace(tzinfo=None), row['wuserid']*-1):
                 result.append({'wuserid': wuserid, 'justday': justday, 'maxminfive': None})
                 if not sdates:
@@ -135,10 +143,6 @@ def withings_table(first_date=None, last_date=None):
 
     maxminfive = _fillnulls(maxminfive)
     maxminfive_24h = _fillnulls(maxminfive_24h)
-    if not first_date:
-        first_date = maxminfive[-1]['justday']
-    if not last_date:
-        last_date = maxminfive[0]['justday']
 
     db_operations_delta = time.time() - db_operations_start
     return {
