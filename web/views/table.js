@@ -51,9 +51,10 @@ x
     .range([margin_left,width])
     .domain([first_date, last_date]);
     //.domain(d3.extent(mdata, function(d) { return d.date; }));
+y_domain = d3.extent(mdata, function(d) { return parseFloat(d.v); });
 y
     .range([height-margin_bottom,1])
-    .domain(d3.extent(mdata, function(d) { return d.v; }));
+    .domain([y_domain[0]-0.5, y_domain[1]+0.5]);
 
 
 for (wuserid in users) {
@@ -67,7 +68,6 @@ var yAxis = d3.axisLeft(y).ticks(yticks);
 
 
 var draw_grid = function(selection, orientation) {
-    console.log('draw_grid %o', selection);
     selection.selectAll("g.tick").select(function() {
         var dthis = d3.select(this);
         if (orientation == "horizontal") {
