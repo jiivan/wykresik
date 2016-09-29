@@ -52,7 +52,7 @@ x
     .domain([first_date, last_date]);
     //.domain(d3.extent(mdata, function(d) { return d.date; }));
 y
-    .range([height-margin_bottom,0])
+    .range([height-margin_bottom,1])
     .domain(d3.extent(mdata, function(d) { return d.v; }));
 
 
@@ -94,4 +94,10 @@ var draw_grid = function(selection, orientation) {
 
 
 svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis).call(draw_grid, "horizontal").call(function(selection) { selection.selectAll("g.tick text").attr('transform', 'rotate(90) translate(35, -14)'); });
-svg.append('g').attr('transform', 'translate('+margin_left+', 0)').call(yAxis).call(draw_grid, "vertical");
+svg.append('g').attr('transform', 'translate('+margin_left+', 0)').call(yAxis).call(draw_grid, "vertical").call(function(selection) {
+    // ucinanie ostatniej (pierwszej bo oś Y jest do góry nogami)
+    // kreseczki z path.
+    var path = selection.select('path');
+    var old_d = path.attr('d');
+    path.attr('d', old_d.slice(0, old_d.length-3));
+});
