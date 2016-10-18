@@ -6,10 +6,14 @@
     <link href="wkrs.css" rel="stylesheet" media="screen"/>
 </head>
 <body>
-    <input type="file" name="file" />
-    <a href='/withings/authorize'>Fetch from Withings</a>
-    <a href='/withings/table'>Table</a>
-    <ol id="list" style="height: 20em; width: 20em; overflow: auto;"></ol>
+    <div>
+        <input type="file" name="file" />
+        <a href='/withings/authorize'>Fetch from Withings</a>
+        <a href='/withings/table'>Table</a>
+    </div>
+    <ol id="list" style="height: 20em; width: 20em; overflow: auto; float: left;"></ol>
+    <ol id="motivation" style="height: 20em; width:40em; overflow: auto; float: left;"></ol>
+    <div style="clear: both;"></div>
     <div style="width: 70%">
         <h2>Step: <span class="slider_step_value">100</span> ms</h2>
         <div id="slider_step"></div>

@@ -210,6 +210,34 @@ var render = function(data) {
     render_tick();
 };
 
+var render_motivation = function(original_data) {
+    var data = original_data.slice(); // shallow copy
+    var l_dbg = d3.select('#list');
+    var l_mot = d3.select('#motivation');
+    var current_row = data.pop();
+    l_mot.append('li').text('Latest result: '+current_row.date+' '+current_row.fat+'% '+current_row.weight+'kg');
+
+    var lowest_fat = current_row;
+    var low_fat = current_row;
+    var high_fat = current_row;
+    var low_weight = current_row;
+    for (var i=0; i<data.length; i++) {
+        // best fat since
+        if ((data[i].fat < low_fat.fat) && (data[i].fat > current_row.fat)) low_fat = data[i];
+        // worst fat since
+        if ((data[i].fat > high_fat.fat) && (data[i].fat < current_row.fat)) high_fat = data[i];
+        //lowest weight
+        if ((data[i].weight > low_weight.weight) && (data[i].weight > current_row.weight)) low_weight = data[i];
+        if (lowest_fat.fat > data[i].fat) lowest_fat = data[i];
+    }
+    l_mot.append('li').text('Lowest fat recorded: '+lowest_fat.fat);
+    if (lowest_fat.fat == current_row.fat)
+        l_mot.append('li').text('Achieved: LOWEST FAT EVER');
+    if (low_fat.date != current_row.date) l_mot.append('li').text('Lowest fat since: '+low_fat.date+' '+low_fat.fat+'%');
+    if (high_fat.date != current_row.date) l_mot.append('li').text('Highest fat since: '+high_fat.date+' '+high_fat.fat+'%');
+    if (low_weight.date != current_row.date) l_mot.append('li').text('Lowest weight since: '+low_weight.date+' '+low_weight.weight+'kg');
+};
+
 var process_csv_array = function(data) {
   x.domain(d3.extent(data, function(d) { return d.weight; }));
   y.domain(d3.extent(data, function(d) { return d.fat; }));
@@ -253,6 +281,7 @@ var process_csv_array = function(data) {
 
   data.sort(function(a, b) { return a.date.getTime()-b.date.getTime(); });
   render(data);
+  render_motivation(data);
 };
 
 var last_fat = 0;
