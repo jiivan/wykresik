@@ -7,14 +7,18 @@ from bottle import run
 from bottle import view
 import csv
 import datetime
+import importlib
 import itertools
+import os
 import psycopg2
 import psycopg2.extras
 from withings import WithingsAuth, WithingsApi
 
-import settings
 import time
 
+
+settings_name = os.environ.get('WYKRESIK_SETTINGS', 'settings')
+settings = importlib.import_module(settings_name)
 
 def db_connection():
     return psycopg2.connect(settings.DATABASE, cursor_factory=psycopg2.extras.DictCursor)
