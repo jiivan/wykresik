@@ -80,8 +80,12 @@ var draw_grid = function(selection, orientation) {
                 .attr('opacity', 0.4)
                 .attr('transform', dthis.attr('transform'));
         } else if (orientation == "vertical") {
+            var stroke_width = 1
+            var label = parseFloat(dthis.select('text').text());
+            if (label == Math.round(label)) stroke_width = 2;
             svg.insert('line', ':first-child')
                 .attr('stroke', 'lightgrey')
+                .attr('stroke-width', stroke_width)
                 .attr('x1', margin_left)
                 .attr('y1', 0)
                 .attr('x2', width)
