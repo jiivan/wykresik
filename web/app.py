@@ -116,7 +116,6 @@ def withings_table(first_date=None, last_date=None):
         with db_conn.cursor() as c:
             c.execute('SELECT * FROM withings_maxminfive_tf ORDER BY justday DESC, wuserid;')
             maxminfive_24h = c.fetchall()
-    maxminfive = maxminfive_24h = []
     userdates = frozenset((r['wuserid'], r['justday'].replace(tzinfo=None)) for r in itertools.chain(maxminfive, maxminfive_24h))
     try:
         if not first_date:
