@@ -12,6 +12,7 @@ import itertools
 import os
 import psycopg2
 import psycopg2.extras
+import requests_oauthlib.oauth1_session
 import sys
 from withings import WithingsAuth, WithingsApi
 
@@ -80,6 +81,9 @@ def withings_comeback():
         creds = get_authorizer(oauth_token).get_credentials(oauth_verifier)
     except InvalidToken:
         sys.stderr.write('Invalid token %s\n' % (oauth_token,))
+        redirect('/withings/authorize')
+    except requests_oauthlib.oauth1_session.TokenMissing as e:
+        sys.stderr.write('Token missing %s (%s)' % (oauth_token, e))
         redirect('/withings/authorize')
     with db_connection() as db_conn:
         with db_conn.cursor() as c:
