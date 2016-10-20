@@ -83,7 +83,7 @@ def withings_comeback():
         sys.stderr.write('Invalid token %s\n' % (oauth_token,))
         redirect('/withings/authorize')
     except requests_oauthlib.oauth1_session.TokenMissing as e:
-        sys.stderr.write('Token missing %s (%s)' % (oauth_token, e))
+        sys.stderr.write('Token missing %s (%s)\n' % (oauth_token, e))
         redirect('/withings/authorize')
     with db_connection() as db_conn:
         with db_conn.cursor() as c:
