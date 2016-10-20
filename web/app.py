@@ -12,6 +12,7 @@ import itertools
 import os
 import psycopg2
 import psycopg2.extras
+import sys
 from withings import WithingsAuth, WithingsApi
 
 import time
@@ -27,7 +28,12 @@ def db_connection():
 
 
 def get_authorizer(token=None):
-    auth = WithingsAuth(settings.WITHINGS['key'], settings.WITHINGS['secret'], 'http://wykresik.genoomy.com/withings/comeback')
+    back_url = '%s://%s/withings/comeback' % (
+        request.get_header('url_scheme', 'http'),
+        request.get_header('HTTP_HOST', request.get_header('SERVER_NAME', 'wykresik.genoomy.com')),
+    )
+    sys.stderr.write('back_url: %s\n' % (back_url,))
+    auth = WithingsAuth(settings.WITHINGS['key'], settings.WITHINGS['secret'], back_url)
     if token:
         with db_connection() as db_conn:
             with db_conn.cursor() as c:
@@ -73,7 +79,7 @@ def withings_comeback():
     try:
         creds = get_authorizer(oauth_token).get_credentials(oauth_verifier)
     except InvalidToken:
-        print('Invalid token %s' % (oauth_token,))
+        sys.stderr.write('Invalid token %s\n' % (oauth_token,))
         redirect('/withings/authorize')
     with db_connection() as db_conn:
         with db_conn.cursor() as c:
