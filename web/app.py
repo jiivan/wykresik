@@ -20,6 +20,8 @@ import time
 settings_name = os.environ.get('WYKRESIK_SETTINGS', 'settings')
 settings = importlib.import_module(settings_name)
 
+class InvalidToken(Exception): pass
+
 def db_connection():
     return psycopg2.connect(settings.DATABASE, cursor_factory=psycopg2.extras.DictCursor)
 
@@ -31,6 +33,8 @@ def get_authorizer(token=None):
             with db_conn.cursor() as c:
                 c.execute('SELECT * FROM withings_credentials WHERE token=%s ORDER BY created_at DESC', (token,))
                 db_result = c.fetchone()
+        if db_result is None:
+            raise InvalidToken
         secret = db_result['secret']
         auth.oauth_token = token
         auth.oauth_secret = secret
@@ -66,12 +70,16 @@ def withings_comeback():
     oauth_token = request.GET.oauth_token
     oauth_verifier = request.GET.oauth_verifier
 
-    creds = get_authorizer(oauth_token).get_credentials(oauth_verifier)
+    try:
+        creds = get_authorizer(oauth_token).get_credentials(oauth_verifier)
+    except InvalidToken:
+        print('Invalid token %s' % (oauth_token,))
+        redirect('/withings/authorize')
     with db_connection() as db_conn:
         with db_conn.cursor() as c:
             c.execute('UPDATE withings_credentials SET wuserid=%s WHERE token=%s', (creds.user_id, oauth_token))
     store_measures(creds)
-    redirect('http://wykresik.genoomy.com/?withings=%d' % (int(creds.user_id),))
+    redirect('/?withings=%d' % (int(creds.user_id),))
 
 @route('/withings/csv/<userid>')
 def withings_csv(userid):
@@ -164,4 +172,5 @@ def withings_table(first_date=None, last_date=None):
 if __name__ == '__main__':
     run(host='localhost', port=8080, debug=True)
 else:
+    default_app.default.config['catchall'] = False
     application = default_app()
