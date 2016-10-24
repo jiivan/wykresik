@@ -7,12 +7,13 @@ console.log('Fetching %o', url);
 d3.csv(url, type, function(error, data) {
         if (error) throw error;
         //processs
-        var date_range = d3.select('.control-box.date-range');
-        if (date_range) {
-            var first_date = d3.timeParse('%Y-%m-%d')(date_range.select('.first').text());
-            var last_date = d3.timeParse('%Y-%m-%d')(date_range.select('.last').text());
-            data = data.filter(function(d) { return (d.date >= first_date) && (d.date <= last_date); });
-        }
+        d3.select('.control-box.date-range').select(function() {
+            if (this) {
+                var first_date = d3.timeParse('%Y-%m-%d')(d3.select(this).select('.first').text());
+                var last_date = d3.timeParse('%Y-%m-%d')(d3.select(this).select('.last').text());
+                data = data.filter(function(d) { return (d.date >= first_date) && (d.date <= last_date); });
+            }
+        });
         render_chart(data);
 });
 
