@@ -181,6 +181,8 @@ def withings_table(first_date=None, last_date=None):
 
 
 @route('/withings/plain')
+@route('/withings/plain-<wuserid:re\d+>')
+#@route('/withings/plain/<first_date:re:\d{4}\d{2}\d{2}>-<last_date:re:\d{4}\d{2}\d{2}>')
 @view('withings_plain')
 def withings_plain(wuserid=None):
 

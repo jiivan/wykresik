@@ -7,7 +7,7 @@
     <div class="control-box wuserid">{{ selected_wuserid }}</div>
     % if len(wuserids) > 1:
         % for wid in wuserids:
-            <span>user: {{ wid }}</span>
+            <a href='/withings/plain-{{ wid }}'>user: {{ wid }}</a>
         % end
     % end
     <div class="canvas-container">
