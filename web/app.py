@@ -182,11 +182,17 @@ def withings_table(first_date=None, last_date=None):
 
 @route('/withings/plain')
 @route('/withings/plain-<wuserid:re:\d+>')
-#@route('/withings/plain/<first_date:re:\d{4}\d{2}\d{2}>-<last_date:re:\d{4}\d{2}\d{2}>')
+@route('/withings/plain-<wuserid:re:\d+>/<first_date:re:\d{4}\d{2}\d{2}>-<last_date:re:\d{4}\d{2}\d{2}>')
 @view('withings_plain')
-def withings_plain(wuserid=None):
+def withings_plain(wuserid=None, first_date=None, last_date=None):
 
-    # Determin wuserid
+    # Determine date range
+    if first_date:
+        first_date = datetime.datetime.strptime(first_date, '%Y%m%d')
+    if last_date:
+        last_date = datetime.datetime.strptime(last_date, '%Y%m%d')
+
+    # Determine wuserid
     with db_connection() as db_conn:
         with db_conn.cursor() as c:
             c.execute('SELECT wuserid FROM withings_measures GROUP BY wuserid')
@@ -195,10 +201,13 @@ def withings_plain(wuserid=None):
         redirect('/withings/authorize')
     if wuserid is None:
         wuserid = random.choice(wuserids)
+    wuserid = int(wuserid)
 
     return {
         'wuserids': wuserids,
         'selected_wuserid': wuserid,
+        'first_date': first_date,
+        'last_date': last_date,
     }
 
 
