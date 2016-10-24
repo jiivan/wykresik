@@ -12,6 +12,7 @@ import itertools
 import os
 import psycopg2
 import psycopg2.extras
+import random
 import requests_oauthlib.oauth1_session
 import sys
 from withings import WithingsAuth, WithingsApi
@@ -176,6 +177,26 @@ def withings_table(first_date=None, last_date=None):
         'db_delta': db_operations_delta,
         'first_date': first_date,
         'last_date': last_date,
+    }
+
+
+@route('/withings/plain')
+@view('withings_plain')
+def withings_plain(wuserid=None):
+
+    # Determin wuserid
+    with db_connection() as db_conn:
+        with db_conn.cursor() as c:
+            c.execute('SELECT wuserid FROM withings_measures GROUP BY wuserid')
+            wuserids = [r[0] for r in c.fetchall()]
+    if not wuserids:
+        redirect('/withings/authorize')
+    if wuserid is None:
+        wuserid = random.choice(wuserids)
+
+    return {
+        'wuserids': wuserids,
+        'selected_wuserid': wuserid,
     }
 
 
