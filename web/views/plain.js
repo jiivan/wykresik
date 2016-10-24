@@ -48,6 +48,37 @@ var draw_line = function(chart_data, line_func, color) {
         });
 };
 
+var draw_grid = function(selection, orientation) {
+    selection.selectAll("g.tick").select(function() {
+        var dthis = d3.select(this);
+        if (orientation == "horizontal") {
+            svg.insert('line', ':first-child')
+                .attr('stroke', 'lightgrey')
+                .attr('x1', 0)
+                .attr('y1', height-margin_bottom)
+                .attr('x2', 0)
+                .attr('y2', 0)
+                .attr('opacity', 0.4)
+                .attr('transform', dthis.attr('transform'));
+        } else if (orientation == "vertical") {
+            var stroke_width = 1
+            var label = parseFloat(dthis.select('text').text());
+            if (label == Math.round(label)) stroke_width = 2;
+            svg.insert('line', ':first-child')
+                .attr('stroke', 'lightgrey')
+                .attr('stroke-width', stroke_width)
+                .attr('x1', margin_left)
+                .attr('y1', 0)
+                .attr('x2', width)
+                .attr('y2', 0)
+                .attr('opacity', 0.4)
+                .attr('transform', dthis.attr('transform'));
+        }
+    });
+};
+
+
+
 var render_chart = function(chart_data) {
     x
         .range([margin_left,width])
