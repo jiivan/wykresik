@@ -1,5 +1,6 @@
 var x = d3.scaleTime();
-var y = d3.scaleLinear();
+var y_weight = d3.scaleLinear();
+var y_fat = d3.scaleLinear();
 var wuserid = d3.select('.control-box.wuserid').text();
 var url = '/withings/csv/'+wuserid;
 console.log('Fetching %o', url);
@@ -32,6 +33,7 @@ var svg = d3.select('#tableChart');
 var width = 1000;
 var height = 500;
 var margin_left = 40;
+var margin_right = 40;
 var margin_bottom = 70;
 
 var draw_line = function(chart_data, line_func, color) {
@@ -81,28 +83,33 @@ var draw_grid = function(selection, orientation) {
 
 var render_chart = function(chart_data) {
     x
-        .range([margin_left,width])
+        .range([margin_left,width-margin_right])
         .domain(d3.extent(chart_data, function(d) { return d.date }));
-    y
+    y_weight
         .range([height-margin_bottom,1])
-        .domain([0, 100]);
+        .domain(d3.extent(chart_data, function(d) { return d.weight }));
+    y_fat
+        .range([height-margin_bottom,1])
+        .domain(d3.extent(chart_data, function(d) { return d.fat }));
 
     var line_func = d3.line().x(function(d) { return x(d.date); });
-    draw_line(chart_data, line_func.y(function(d) { return y(d.weight); }), 'blue');
-    draw_line(chart_data, line_func.y(function(d) { return y(d.fat); }), 'green');
+    draw_line(chart_data, line_func.y(function(d) { return y_weight(d.weight); }), 'blue');
+    draw_line(chart_data, line_func.y(function(d) { return y_fat(d.fat); }), 'green');
 
     var xAxis = d3.axisBottom(x).ticks(d3.timeMonday.every(1)).tickFormat(d3.timeFormat("%Y.%m.%d"));
-    yticks = Math.round(y.domain()[1] - y.domain()[0])*2 // ticki co 0.5
-    var yAxis = d3.axisLeft(y).ticks(yticks);
+    var yticks = function(linef) { return Math.round(linef.domain()[1] - linef.domain()[0])*2 }; // ticki co 0.5
+    var yAxis_weight = d3.axisLeft(y_weight).ticks(yticks(y_weight));
+    var yAxis_fat = d3.axisRight(y_fat).ticks(yticks(y_fat));
 
 
     svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis).call(draw_grid, "horizontal").call(function(selection) { selection.selectAll("g.tick text").attr('transform', 'rotate(90) translate(35, -14)'); });
-    svg.append('g').attr('transform', 'translate('+margin_left+', 0)').call(yAxis).call(draw_grid, "vertical").call(function(selection) {
+    svg.append('g').attr('transform', 'translate('+margin_left+', 0)').call(yAxis_weight).call(draw_grid, "vertical").call(function(selection) {
         // ucinanie ostatniej (pierwszej bo oś Y jest do góry nogami)
         // kreseczki z path.
         var path = selection.select('path');
         var old_d = path.attr('d');
         path.attr('d', old_d.slice(0, old_d.length-3));
     });
+    svg.append('g').attr('transform', 'translate('+(width-margin_right)+')').call(yAxis_fat);
 
 };
