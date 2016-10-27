@@ -26,8 +26,6 @@
         <svg id="tableChart" width="1000" height="500"></svg>
     </div>
     <script src="https://d3js.org/d3.v4.js"></script>
-    <script type="text/javascript">
-        % include('plain.js')
-    </script>
+    <script type="text/javascript" src="/s/plain.js"></script>
 </body>
 </html>

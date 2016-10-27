@@ -43,8 +43,6 @@
         </div>
     </div>
     <script src="https://d3js.org/d3.v4.js"></script>
-    <script type="text/javascript">
-        % include('table.js')
-    </script>
+    <script src="/s/table.js" type="text/javascript"></script>
 </body>
 </html>
