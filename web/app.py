@@ -228,6 +228,11 @@ def withings_plain(wuserid=None, first_date=None, last_date=None):
 
 
 if __name__ == '__main__':
+    @route('/s/<path:re:.*$>')
+    def static_serve(path):
+        fullpath = 'static/'+path
+        with open(fullpath, 'rb') as f:
+            return f.read()
     run(host='localhost', port=8080, debug=True)
 else:
     default_app.default.config['catchall'] = False

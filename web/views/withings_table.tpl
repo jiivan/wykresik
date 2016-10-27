@@ -2,12 +2,17 @@
 <head>
     <meta charset="utf-8"/>
     <link href="../wkrs.css" rel="stylesheet" media="screen"/>
+    <link href="/s/pickadate/default.css" rel="stylesheet" media="screen"/>
+    <link href="/s/pickadate/default.date.css" rel="stylesheet" media="screen"/>
     <style type="text/css">
         tr:nth-child(even) {background-color: #f2f2f2}
         th {
             background-color: #4CAF50;
             color: white;
         }
+    </style>
+    <style type="text/css">
+        .control-box { display: none; }
     </style>
 </head>
 <body>
@@ -19,6 +24,10 @@
             {{ wid }}
         </a>
     % end
+
+
+    % include('inc_date_range.tpl', prefix='/withings/table-'+str(selected_wuserid))
+
     <div>
         <svg id="tableChart" width="1000" height="500"></svg>
     </div>
@@ -44,5 +53,9 @@
     </div>
     <script src="https://d3js.org/d3.v4.js"></script>
     <script src="/s/table.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
+    <script src="/s/pickadate/picker.js" type="text/javascript"></script>
+    <script src="/s/pickadate/picker.date.js" type="text/javascript"></script>
+    <script src="/s/date_range.js" type="text/javascript"></script>
 </body>
 </html>
