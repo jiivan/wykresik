@@ -32,10 +32,13 @@ var handle_query = function() {
             l_dbg.append('li').text('handle_query err: '+e);
             return;
         }
-        l_dbg.append('li').text('Fetching csv: '+url);
-        d3.csv(url, type, function(error, data) {
-            if (error) throw error;
-            process_csv_array(data);
+        d3.select('.top-actions').append('button').text('Render user: '+userid).on('click', function() {
+            d3.select(this).remove();
+            l_dbg.append('li').text('Fetching csv: '+url);
+            d3.csv(url, type, function(error, data) {
+                if (error) throw error;
+                process_csv_array(data);
+            });
         });
     }
 };
