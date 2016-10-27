@@ -120,20 +120,34 @@ def withings_csv(userid):
 
 
 @route('/withings/table')
+@route('/withings/table-<wuserid:re:\d+>')
 @route('/withings/table/<first_date:re:\d{4}\d{2}\d{2}>-<last_date:re:\d{4}\d{2}\d{2}>')
+@route('/withings/table-<wuserid:re:\d+>/<first_date:re:\d{4}\d{2}\d{2}>-<last_date:re:\d{4}\d{2}\d{2}>')
 @view('withings_table')
-def withings_table(first_date=None, last_date=None):
+def withings_table(wuserid=None, first_date=None, last_date=None):
     if first_date:
         first_date = datetime.datetime.strptime(first_date, '%Y%m%d')
     if last_date:
         last_date = datetime.datetime.strptime(last_date, '%Y%m%d')
+
+    # Determine wuserid
+    with db_connection() as db_conn:
+        with db_conn.cursor() as c:
+            c.execute('SELECT wuserid FROM withings_measures GROUP BY wuserid')
+            wuserids = [r[0] for r in c.fetchall()]
+    if not wuserids:
+        redirect('/withings/authorize')
+    if wuserid is None:
+        wuserid = random.choice(wuserids)
+    wuserid = int(wuserid)
+
     db_operations_start = time.time()
     with db_connection() as db_conn:
         with db_conn.cursor() as c:
-            c.execute('SELECT * FROM withings_maxminfive ORDER BY justday DESC, wuserid;')
+            c.execute('SELECT * FROM withings_maxminfive WHERE wuserid = %s ORDER BY justday DESC;', (wuserid,))
             maxminfive = c.fetchall()
         with db_conn.cursor() as c:
-            c.execute('SELECT * FROM withings_maxminfive_tf ORDER BY justday DESC, wuserid;')
+            c.execute('SELECT * FROM withings_maxminfive_tf WHERE wuserid = %s ORDER BY justday DESC;', (wuserid,))
             maxminfive_24h = c.fetchall()
     userdates = frozenset((r['wuserid'], r['justday'].replace(tzinfo=None)) for r in itertools.chain(maxminfive, maxminfive_24h))
     try:
@@ -177,6 +191,8 @@ def withings_table(first_date=None, last_date=None):
         'db_delta': db_operations_delta,
         'first_date': first_date,
         'last_date': last_date,
+        'wuserids': wuserids,
+        'selected_wuserid': wuserid,
     }
 
 

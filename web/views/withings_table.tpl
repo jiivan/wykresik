@@ -11,6 +11,14 @@
     </style>
 </head>
 <body>
+    % for wid in wuserids:
+        <a href='/withings/table-{{ wid }}'>user:
+            % if wid == selected_wuserid:
+             *
+            % end
+            {{ wid }}
+        </a>
+    % end
     <div>
         <svg id="tableChart" width="1000" height="500"></svg>
     </div>
