@@ -69,7 +69,7 @@ var draw_grid = function(selection, orientation) {
                 .attr('stroke-width', stroke_width)
                 .attr('x1', margin_left)
                 .attr('y1', 0)
-                .attr('x2', width)
+                .attr('x2', width-margin_right)
                 .attr('y2', 0)
                 .attr('opacity', 0.4)
                 .attr('transform', dthis.attr('transform'));
