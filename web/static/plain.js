@@ -6,14 +6,6 @@ var url = '/withings/csv/'+wuserid;
 console.log('Fetching %o', url);
 d3.csv(url, type, function(error, data) {
         if (error) throw error;
-        //processs
-        d3.select('.control-box.date-range').select(function() {
-            if (this) {
-                var first_date = d3.timeParse('%Y-%m-%d')(d3.select(this).select('.first').text());
-                var last_date = d3.timeParse('%Y-%m-%d')(d3.select(this).select('.last').text());
-                data = data.filter(function(d) { return (d.date >= first_date) && (d.date <= last_date); });
-            }
-        });
         render_chart(data);
 });
 
@@ -88,9 +80,20 @@ var draw_grid = function(selection, orientation) {
 
 
 var render_chart = function(chart_data) {
+    //processs
+    var first_date = d3.min(chart_data, function(d) { return d.date });
+    var last_date = d3.max(chart_data, function(d) { return d.date });
+    d3.select('.control-box.date-range').select(function() {
+        if (this) {
+            first_date = d3.timeParse('%Y-%m-%d')(d3.select(this).select('.first').text());
+            last_date = d3.timeParse('%Y-%m-%d')(d3.select(this).select('.last').text());
+            chart_data = chart_data.filter(function(d) { return (d.date >= first_date) && (d.date <= last_date); });
+        }
+    });
+
     x
         .range([margin_left,width-margin_right])
-        .domain(d3.extent(chart_data, function(d) { return d.date }));
+        .domain([first_date, last_date]);
     y_weight
         .range([height-margin_bottom,1])
         .domain(d3.extent(chart_data, function(d) { return d.weight }));
