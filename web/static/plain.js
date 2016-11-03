@@ -91,15 +91,24 @@ var render_chart = function(chart_data) {
         }
     });
 
+    // synchronize domains etc.
+    var _fc = function(a) { return [Math.floor(a[0]), Math.ceil(a[1])]; };
+    var y_weight_domain = _fc(d3.extent(chart_data, function(d) { return d.weight }));
+    var y_fat_domain = _fc(d3.extent(chart_data, function(d) { return d.fat }));
+    var _diff = function(dm) { return Math.ceil(dm[1] - dm[0]); };
+    var delta = _diff(y_weight_domain) - _diff(y_fat_domain);
+    if (delta < 0) y_weight_domain[1] -= delta;
+    else if (delta > 0) y_fat_domain[1] += delta;
+
     x
         .range([margin_left,width-margin_right])
         .domain([first_date, last_date]);
     y_weight
         .range([height-margin_bottom,1])
-        .domain(d3.extent(chart_data, function(d) { return d.weight }));
+        .domain(y_weight_domain);
     y_fat
         .range([height-margin_bottom,1])
-        .domain(d3.extent(chart_data, function(d) { return d.fat }));
+        .domain(y_fat_domain);
 
     var line_func = d3.line().x(function(d) { return x(d.date); });
     draw_line(chart_data, line_func.y(function(d) { return y_weight(d.weight); }), 'blue');
