@@ -111,8 +111,10 @@ var render_chart = function(chart_data) {
         .domain(y_fat_domain);
 
     var line_func = d3.line().x(function(d) { return x(d.date); });
-    draw_line(chart_data, line_func.y(function(d) { return y_weight(d.weight); }), 'blue');
-    draw_line(chart_data, line_func.y(function(d) { return y_fat(d.fat); }), 'green');
+    var weight_color = 'blue';
+    var fat_color = 'green';
+    draw_line(chart_data, line_func.y(function(d) { return y_weight(d.weight); }), weight_color);
+    draw_line(chart_data, line_func.y(function(d) { return y_fat(d.fat); }), fat_color);
 
     var xAxis = d3.axisBottom(x).ticks(d3.timeMonday.every(1)).tickFormat(d3.timeFormat("%Y.%m.%d"));
     var yticks = function(linef) { return Math.round(linef.domain()[1] - linef.domain()[0])*2 }; // ticki co 0.5
@@ -121,18 +123,18 @@ var render_chart = function(chart_data) {
 
 
     svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis).call(draw_grid, "horizontal").call(function(selection) { selection.selectAll("g.tick text").attr('transform', 'rotate(90) translate(35, -14)'); });
-    svg.append('g').attr('transform', 'translate('+margin_left+', 0)').call(yAxis_weight).call(draw_grid, "vertical").call(function(selection) {
+    svg.append('g').attr('class', 'axis-weight').attr('transform', 'translate('+margin_left+', 0)').call(yAxis_weight).call(draw_grid, "vertical").call(function(selection) {
         // ucinanie ostatniej (pierwszej bo oś Y jest do góry nogami)
         // kreseczki z path.
         var path = selection.select('path');
         var old_d = path.attr('d');
         path.attr('d', old_d.slice(0, old_d.length-3));
     });
-    svg.append('g').attr('transform', 'translate('+(width-margin_right)+')').call(yAxis_fat);
+    svg.append('g').attr('class', 'axis-fat').attr('transform', 'translate('+(width-margin_right)+')').call(yAxis_fat);
 
     // axis labels
     svg.append('text').attr('class', 'axis-label').attr('transform', 'translate(0, '+(height-margin_bottom/2)+')').text("Date");
-    svg.append('text').attr('class', 'axis-label').attr('transform', 'translate('+(margin_left/3)+', 95),rotate(-90)').text("Weight (kg)");
-    svg.append('text').attr('class', 'axis-label').attr('transform', 'translate('+(width-(margin_right/3))+', 60), rotate(-90)').text("Fat (%)");
+    svg.append('text').attr('class', 'axis-label weight').attr('transform', 'translate('+(margin_left/3)+', 95),rotate(-90)').text("Weight (kg)");
+    svg.append('text').attr('class', 'axis-label fat').attr('transform', 'translate('+(width-(margin_right/3))+', 60), rotate(-90)').text("Fat (%)");
 
 };

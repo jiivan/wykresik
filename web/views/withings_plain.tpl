@@ -6,6 +6,14 @@
     <link href="/s/pickadate/default.date.css" rel="stylesheet" media="screen"/>
     <style type="text/css">
         .control-box { display: none; }
+        .axis-weight,
+        .axis-weight path,
+        .axis-weight .tick line,
+        .axis-label.weight { stroke: blue; }
+        .axis-fat,
+        .axis-fat path,
+        .axis-fat .tick line,
+        .axis-label.fat { stroke: green; }
     </style>
 </head>
 <body>
