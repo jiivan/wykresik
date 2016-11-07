@@ -30,8 +30,8 @@ function type(d) {
 var svg = d3.select('#tableChart');
 var width = 1000;
 var height = 500;
-var margin_left = 40;
-var margin_right = 40;
+var margin_left = 80;
+var margin_right = 80;
 var margin_bottom = 70;
 
 var draw_line = function(chart_data, line_func, color) {
@@ -129,5 +129,10 @@ var render_chart = function(chart_data) {
         path.attr('d', old_d.slice(0, old_d.length-3));
     });
     svg.append('g').attr('transform', 'translate('+(width-margin_right)+')').call(yAxis_fat);
+
+    // axis labels
+    svg.append('text').attr('class', 'axis-label').attr('transform', 'translate(0, '+(height-margin_bottom/2)+')').text("Date");
+    svg.append('text').attr('class', 'axis-label').attr('transform', 'translate('+(margin_left/3)+', 95),rotate(-90)').text("Weight (kg)");
+    svg.append('text').attr('class', 'axis-label').attr('transform', 'translate('+(width-(margin_right/3))+', 60), rotate(-90)').text("Fat (%)");
 
 };
