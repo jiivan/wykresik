@@ -9,11 +9,11 @@
         .axis-weight,
         .axis-weight path,
         .axis-weight .tick line,
-        .axis-label.weight { stroke: blue; }
+        .axis-label.weight { stroke: blue; font-weight: lighter;}
         .axis-fat,
         .axis-fat path,
         .axis-fat .tick line,
-        .axis-label.fat { stroke: green; }
+        .axis-label.fat { stroke: green; font-weight: lighter;}
     </style>
 </head>
 <body>
