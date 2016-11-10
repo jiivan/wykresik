@@ -13,11 +13,20 @@ $('.dateto').pickadate({
     format: 'yyyy-mm-dd',
 });
 $('form.date-range').submit(function() {
-    var datefrom = $('.datefrom', this).val();
-    var dateto = $('.dateto', this).val();
+    var this_form = this;
+    var datefrom = $('.datefrom', this_form).val();
+    var dateto = $('.dateto', this_form).val();
+    var _prep_numeric = function(selector) {
+        return Math.round(parseFloat($(selector, this_form).val())*10);
+    };
+    var fat_min = _prep_numeric('.fat_min');
+    var fat_max = _prep_numeric('.fat_max');
+    var weight_min = _prep_numeric('.weight_min');
+    var weight_max = _prep_numeric('.weight_max');
     var prefix = $('.control-box.date-range-prefix').text();
     if (! (datefrom && dateto) ) return false
     var url = prefix + '/' + datefrom.replace(/-/g, '') + '-' + dateto.replace(/-/g, '');
+    url += '/fat-'+fat_min+'-'+fat_max+'/weight-'+weight_min+'-'+weight_max;
     console.log('submit %o', url);
     window.location.href = url;
     return false;

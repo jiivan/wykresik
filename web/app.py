@@ -201,6 +201,7 @@ def withings_table(wuserid=None, first_date=None, last_date=None):
 @route('/withings/plain-<wuserid:re:\d+>/<first_date:re:\d{4}\d{2}\d{2}>-<last_date:re:\d{4}\d{2}\d{2}>')
 @route('/withings/plain-<wuserid:re:\d+>/fat-<fat_query:re:\d+-\d+>')
 @route('/withings/plain-<wuserid:re:\d+>/weight-<weight_query:re:\d+-\d+>')
+@route('/withings/plain-<wuserid:re:\d+>/<first_date:re:\d{4}\d{2}\d{2}>-<last_date:re:\d{4}\d{2}\d{2}>/fat-<fat_query:re:\d+-\d+>/weight-<weight_query:re:\d+-\d+>')
 @view('withings_plain')
 def withings_plain(wuserid=None, first_date=None, last_date=None, fat_query=None, weight_query=None):
 

@@ -121,6 +121,14 @@ var render_chart = function(chart_data) {
     if (delta < 0) y_weight_domain = _adjust_domain(y_weight_domain, delta);
     else if (delta > 0) y_fat_domain = _adjust_domain(y_fat_domain, delta);
 
+    // propagate domains to form
+    $('form.date-range .fat_min').val(y_fat_domain[0]);
+    $('form.date-range .fat_max').val(y_fat_domain[1]);
+    $('form.date-range .weight_min').val(y_weight_domain[0]);
+    $('form.date-range .weight_max').val(y_weight_domain[1]);
+    $('form.date-range .datefrom').val(d3.timeFormat('%Y-%m-%d')(first_date));
+    $('form.date-range .dateto').val(d3.timeFormat('%Y-%m-%d')(last_date));
+
     x
         .range([margin_left,width-margin_right])
         .domain([first_date, last_date]);
