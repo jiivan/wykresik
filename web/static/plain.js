@@ -84,21 +84,42 @@ var render_chart = function(chart_data) {
     var first_date = d3.min(chart_data, function(d) { return d.date });
     var last_date = d3.max(chart_data, function(d) { return d.date });
     d3.select('.control-box.date-range').select(function() {
-        if (this) {
-            first_date = d3.timeParse('%Y-%m-%d')(d3.select(this).select('.first').text());
-            last_date = d3.timeParse('%Y-%m-%d')(d3.select(this).select('.last').text());
-            chart_data = chart_data.filter(function(d) { return (d.date >= first_date) && (d.date <= last_date); });
-        }
+        if (!this) return;
+
+        first_date = d3.timeParse('%Y-%m-%d')(d3.select(this).select('.first').text());
+        last_date = d3.timeParse('%Y-%m-%d')(d3.select(this).select('.last').text());
+        chart_data = chart_data.filter(function(d) { return (d.date >= first_date) && (d.date <= last_date); });
     });
+
+    // determine fat limits
+    var fat_min, fat_max;
+    d3.select('.control-box.fat-limits').select(function() {
+        if (!this) return;
+        fat_min = parseFloat(d3.select(this).attr('data-min'));
+        fat_max = parseFloat(d3.select(this).attr('data-max'));
+    });
+    // determine weight limits
+    var weight_min, weight_max;
+    d3.select('.control-box.weight-limits').select(function() {
+        if (!this) return;
+        weight_min = parseFloat(d3.select(this).attr('data-min'));
+        weight_max = parseFloat(d3.select(this).attr('data-max'));
+    });
+
 
     // synchronize domains etc.
     var _fc = function(a) { return [Math.floor(a[0]), Math.ceil(a[1])]; };
     var y_weight_domain = _fc(d3.extent(chart_data, function(d) { return d.weight }));
+    if (! (weight_min === undefined)) y_weight_domain = _fc([weight_min, weight_max]);
     var y_fat_domain = _fc(d3.extent(chart_data, function(d) { return d.fat }));
+    if (! (fat_min === undefined)) y_fat_domain = _fc([fat_min, fat_max]);
     var _diff = function(dm) { return Math.ceil(dm[1] - dm[0]); };
     var delta = _diff(y_weight_domain) - _diff(y_fat_domain);
-    if (delta < 0) y_weight_domain[1] -= delta;
-    else if (delta > 0) y_fat_domain[1] += delta;
+    var _adjust_domain = function(d, delta) {
+        return [d[0] - Math.floor(delta/2), d[1] + Math.ceil(delta/2)];
+    };
+    if (delta < 0) y_weight_domain = _adjust_domain(y_weight_domain, delta);
+    else if (delta > 0) y_fat_domain = _adjust_domain(y_fat_domain, delta);
 
     x
         .range([margin_left,width-margin_right])

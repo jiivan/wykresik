@@ -18,6 +18,12 @@
 </head>
 <body>
     <div class="control-box wuserid">{{ selected_wuserid }}</div>
+    % if fat_min is not None:
+        <div class="control-box fat-limits" data-min="{{ fat_min }}" data-max="{{ fat_max }}"></div>
+    % end
+    % if weight_min is not None:
+        <div class="control-box weight-limits" data-min="{{ weight_min }}" data-max="{{ weight_max }}"></div>
+    % end
     % if first_date and last_date:
         <div class="control-box date-range">
             <span class="first">{{ first_date.strftime('%Y-%m-%d') }}</span>

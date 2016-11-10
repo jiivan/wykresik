@@ -199,8 +199,10 @@ def withings_table(wuserid=None, first_date=None, last_date=None):
 @route('/withings/plain')
 @route('/withings/plain-<wuserid:re:\d+>')
 @route('/withings/plain-<wuserid:re:\d+>/<first_date:re:\d{4}\d{2}\d{2}>-<last_date:re:\d{4}\d{2}\d{2}>')
+@route('/withings/plain-<wuserid:re:\d+>/fat-<fat_query:re:\d+-\d+>')
+@route('/withings/plain-<wuserid:re:\d+>/weight-<weight_query:re:\d+-\d+>')
 @view('withings_plain')
-def withings_plain(wuserid=None, first_date=None, last_date=None):
+def withings_plain(wuserid=None, first_date=None, last_date=None, fat_query=None, weight_query=None):
 
     # Determine date range
     if first_date:
@@ -219,11 +221,26 @@ def withings_plain(wuserid=None, first_date=None, last_date=None):
         wuserid = random.choice(wuserids)
     wuserid = int(wuserid)
 
+    def parse_limits(query):
+        if not query:
+            return None, None
+        return sorted(float(s)/10 for s in query.split('-'))
+
+    # Determine fat limits
+    fat_min, fat_max = parse_limits(fat_query)
+
+    # Determine weight limits
+    weight_min, weight_max = parse_limits(weight_query)
+
     return {
         'wuserids': wuserids,
         'selected_wuserid': wuserid,
         'first_date': first_date,
         'last_date': last_date,
+        'fat_min': fat_min,
+        'fat_max': fat_max,
+        'weight_min': weight_min,
+        'weight_max': weight_max,
     }
 
 
