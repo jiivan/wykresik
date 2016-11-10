@@ -33,6 +33,7 @@ var height = 500;
 var margin_left = 80;
 var margin_right = 80;
 var margin_bottom = 70;
+var margin_top = 10;
 
 var draw_line = function(chart_data, line_func, color) {
     svg.append('path')
@@ -55,7 +56,7 @@ var draw_grid = function(selection, orientation) {
             svg.insert('line', ':first-child')
                 .attr('stroke', 'lightgrey')
                 .attr('x1', 0)
-                .attr('y1', height-margin_bottom)
+                .attr('y1', height-margin_bottom-margin_top)
                 .attr('x2', 0)
                 .attr('y2', 0)
                 .attr('opacity', 0.4)
@@ -133,10 +134,10 @@ var render_chart = function(chart_data) {
         .range([margin_left,width-margin_right])
         .domain([first_date, last_date]);
     y_weight
-        .range([height-margin_bottom,1])
+        .range([height-margin_bottom-margin_top,margin_top])
         .domain(y_weight_domain);
     y_fat
-        .range([height-margin_bottom,1])
+        .range([height-margin_bottom-margin_top,margin_top])
         .domain(y_fat_domain);
 
     var line_func = d3.line().x(function(d) { return x(d.date); });
@@ -151,7 +152,7 @@ var render_chart = function(chart_data) {
     var yAxis_fat = d3.axisRight(y_fat).ticks(yticks(y_fat));
 
 
-    svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom)+')').call(xAxis).call(draw_grid, "horizontal").call(function(selection) { selection.selectAll("g.tick text").attr('transform', 'rotate(90) translate(35, -14)'); });
+    svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom-margin_top)+')').call(xAxis).call(draw_grid, "horizontal").call(function(selection) { selection.selectAll("g.tick text").attr('transform', 'rotate(90) translate(35, -14)'); });
     svg.append('g').attr('class', 'axis-weight').attr('transform', 'translate('+margin_left+', 0)').call(yAxis_weight).call(draw_grid, "vertical").call(function(selection) {
         // ucinanie ostatniej (pierwszej bo oś Y jest do góry nogami)
         // kreseczki z path.
