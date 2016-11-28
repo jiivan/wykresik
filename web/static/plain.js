@@ -3,11 +3,34 @@ var y_weight = d3.scaleLinear();
 var y_fat = d3.scaleLinear();
 var wuserid = d3.select('.control-box.wuserid').text();
 var url = '/withings/csv/'+wuserid;
+var url_mm = '/withings/csv-mm5/'+wuserid;
+
+var data_wcsv, data_mm;
 console.log('Fetching %o', url);
 d3.csv(url, type, function(error, data) {
         if (error) throw error;
-        render_chart(data);
+        data_wcsv = data;
 });
+
+var type_mm = function(d) {
+  d.date = d3.timeParse("%Y-%m-%d %I:%M %p")(d.Date);
+  d.fat_mm = +d['Fat best of 5d (%)'];
+  d.fat_mm24 = +d['Fat best of 5*24h (%)'];
+  // TODO last_fat
+  return d;
+};
+console.log('Fetching %o', url_mm);
+d3.csv(url_mm, type_mm, function(error, data) {
+        if (error) throw error;
+        data_mm = data;
+});
+
+var data_synchronizer = window.setInterval(function() {
+    if ((data_mm === undefined) || (data_wcsv === undefined)) return;
+    window.clearInterval(data_synchronizer);
+    var data = synchronize_data(data_wcsv, data_mm);
+    render_chart(data);
+}, 10);
 
 
 var last_fat = 0;
@@ -25,6 +48,48 @@ function type(d) {
 
   return d;
 }
+
+var synchronize_data = function(wcsv, mm) {
+    var d1 = wcsv.slice();
+    var d2 = mm.slice();
+    var result = [];
+    /*
+    var _cp = function(row) {
+        var row_result = new Map([ ['date', row.date] ]);
+        ['date', 'fat', 'weight', 'fat_mm', 'fat_mm24'].forEach(function(key) {
+            if (row[key] === undefined) return;
+            row_result[key] = row[key];
+        });
+        return row_result;
+    };
+    */
+    while (d1.length || d2.length) {
+        if (!d1.length || (d2.length && (d2[0].date.getTime() < d1[0].date.getTime()))) {
+            result.push(d2.shift());
+            continue;
+        }
+        if (!d2.length || (d1.length && (d1[0].date.getTime() < d2[0].date.getTime()))) {
+            result.push(d1.shift());
+            continue;
+        }
+        if (d2[0].date.getTime() == d1[0].date.getTime()) {
+            var row1 = d1.shift();
+            var row2 = d2.shift();
+            var row_result = new Map([
+                ['date',    row1.date],
+                ['fat',     row1.fat],
+                ['weight',  row1.weight],
+                ['fat_mm',  row2.fat_mm],
+                ['fat_mm24', row2.fat_mm24]
+            ]);
+            result.push(row_result);
+            continue;
+        }
+        console.log('d1: %o d2: %o', d1, d2);
+        throw "Impossible condition";
+    };
+    return result;
+};
 
 // svg rendering
 var svg = d3.select('#tableChart');
@@ -81,6 +146,7 @@ var draw_grid = function(selection, orientation) {
 
 
 var render_chart = function(chart_data) {
+    var original_data = chart_data.slice();
     //processs
     var first_date = d3.min(chart_data, function(d) { return d.date });
     var last_date = d3.max(chart_data, function(d) { return d.date });
@@ -114,6 +180,10 @@ var render_chart = function(chart_data) {
     if (! (weight_min === undefined)) y_weight_domain = _fc([weight_min, weight_max]);
     var y_fat_domain = _fc(d3.extent(chart_data, function(d) { return d.fat }));
     if (! (fat_min === undefined)) y_fat_domain = _fc([fat_min, fat_max]);
+
+    var fat_enabled=true;
+    var weight_enabled=true;
+
     var _diff = function(dm) { return Math.ceil(dm[1] - dm[0]); };
     var delta = _diff(y_weight_domain) - _diff(y_fat_domain);
     var _adjust_domain = function(d, delta) {
@@ -143,8 +213,11 @@ var render_chart = function(chart_data) {
     var line_func = d3.line().x(function(d) { return x(d.date); });
     var weight_color = 'blue';
     var fat_color = 'green';
-    draw_line(chart_data, line_func.y(function(d) { return y_weight(d.weight); }), weight_color);
-    draw_line(chart_data, line_func.y(function(d) { return y_fat(d.fat); }), fat_color);
+    if (fat_enabled) draw_line(chart_data.filter(function(d) {return d.fat !== undefined}), line_func.y(function(d) { return y_weight(d.weight); }), weight_color);
+    if (weight_enabled) draw_line(chart_data.filter(function(d) {return d.weight !== undefined}), line_func.y(function(d) { return y_fat(d.fat); }), fat_color);
+    // mm data
+    draw_line(chart_data.filter(function(d) {return d.fat_mm !== undefined}), line_func.y(function(d) { return y_fat(d.fat_mm); }), 'pink');
+    draw_line(chart_data.filter(function(d) {return d.fat_mm24 !== undefined}), line_func.y(function(d) { return y_fat(d.fat_mm24); }), 'yellow');
 
     var xAxis = d3.axisBottom(x).ticks(d3.timeMonday.every(1)).tickFormat(d3.timeFormat("%Y.%m.%d"));
     var yticks = function(linef) { return Math.round(linef.domain()[1] - linef.domain()[0])*2 }; // ticki co 0.5
@@ -153,18 +226,18 @@ var render_chart = function(chart_data) {
 
 
     svg.append('g').attr('transform', 'translate(0, '+(height-margin_bottom-margin_top)+')').call(xAxis).call(draw_grid, "horizontal").call(function(selection) { selection.selectAll("g.tick text").attr('transform', 'rotate(90) translate(35, -14)'); });
-    svg.append('g').attr('class', 'axis-weight').attr('transform', 'translate('+margin_left+', 0)').call(yAxis_weight).call(draw_grid, "vertical").call(function(selection) {
+    if (weight_enabled) svg.append('g').attr('class', 'axis-weight').attr('transform', 'translate('+margin_left+', 0)').call(yAxis_weight).call(draw_grid, "vertical").call(function(selection) {
         // ucinanie ostatniej (pierwszej bo oś Y jest do góry nogami)
         // kreseczki z path.
         var path = selection.select('path');
         var old_d = path.attr('d');
         path.attr('d', old_d.slice(0, old_d.length-3));
     });
-    svg.append('g').attr('class', 'axis-fat').attr('transform', 'translate('+(width-margin_right)+')').call(yAxis_fat);
+    if (fat_enabled) svg.append('g').attr('class', 'axis-fat').attr('transform', 'translate('+(width-margin_right)+')').call(yAxis_fat);
 
     // axis labels
     svg.append('text').attr('class', 'axis-label').attr('transform', 'translate(0, '+(height-margin_bottom/2)+')').text("Date");
-    svg.append('text').attr('class', 'axis-label weight').attr('transform', 'translate('+(margin_left/3)+', 95),rotate(-90)').text("Weight (kg)");
-    svg.append('text').attr('class', 'axis-label fat').attr('transform', 'translate('+(width-(margin_right/3))+', 60), rotate(-90)').text("Fat (%)");
+    if (weight_enabled) svg.append('text').attr('class', 'axis-label weight').attr('transform', 'translate('+(margin_left/3)+', 95),rotate(-90)').text("Weight (kg)");
+    if (fat_enabled) svg.append('text').attr('class', 'axis-label fat').attr('transform', 'translate('+(width-(margin_right/3))+', 60), rotate(-90)').text("Fat (%)");
 
 };

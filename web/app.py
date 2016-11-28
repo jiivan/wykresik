@@ -118,6 +118,55 @@ def withings_csv(userid):
     response.content_type = 'text/plain'
     return csvfile.read()
 
+@route('/withings/csv-mm5/<userid>')
+def withings_csv_mm5(userid):
+    import io
+    csvfile = io.StringIO()
+    writer = csv.writer(csvfile)
+    writer.writerow(["Date","Fat best of 5d (%)","Fat best of 5*24h (%)"])
+    def _r(v):
+        import decimal
+        if not isinstance(v, decimal.Decimal):
+            return v
+        return '%.2f' % v
+
+    with db_connection() as db_conn:
+        with db_conn.cursor() as c:
+            c.execute('SELECT * FROM withings_maxminfive WHERE wuserid = %s ORDER BY justday;', (userid,))
+            maxminfive = c.fetchall()
+        with db_conn.cursor() as c:
+            c.execute('SELECT * FROM withings_maxminfive_tf WHERE wuserid = %s ORDER BY justday;', (userid,))
+            maxminfive_24h = c.fetchall()
+
+    def filldate_zip(a,b):
+        def _nd(d):
+            return d.replace(tzinfo=None)
+        while a or b:
+            if (not a) or (_nd(b[0]['justday']) < _nd(a[0]['justday'])):
+                row = b.pop(0)
+                yield row['justday'], None, row['maxminfive']
+                continue
+            if (not b) or (_nd(a[0]['justday']) < _nd(b[0]['justday'])):
+                row = a.pop(0)
+                yield row['justday'], row['maxminfive'], None
+                continue
+            if _nd(a[0]['justday']) == _nd(b[0]['justday']):
+                rowa = a.pop(0)
+                rowb = b.pop(0)
+                yield rowa['justday'], rowa['maxminfive'], rowb['maxminfive']
+                continue
+            raise RuntimeError
+    
+    for justday, mm5, mm524h in filldate_zip(maxminfive, maxminfive_24h):
+        writer.writerow([
+            justday.strftime('%Y-%m-%d %I:%M %p'),
+            _r(mm5),
+            _r(mm524h),
+        ])
+    csvfile.seek(0)
+    response.content_type = 'text/plain'
+    return csvfile.read()
+
 
 @route('/withings/table')
 @route('/withings/table-<wuserid:re:\d+>')
