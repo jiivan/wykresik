@@ -111,6 +111,11 @@ var draw_line = function(chart_data, line_func, color) {
         })
         .on('mouseout', function() {
             d3.select(this).attr('stroke-width', '2').attr('stroke', color);
+        })
+        .on('click', function() {
+            var $this = $(this);
+            $this.hide();
+            window.setTimeout(function() { $this.show(); }, 1000);
         });
 };
 
