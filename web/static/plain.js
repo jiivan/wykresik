@@ -100,8 +100,10 @@ var margin_right = 80;
 var margin_bottom = 70;
 var margin_top = 10;
 
-var draw_line = function(chart_data, line_func, color) {
-    svg.append('path')
+var path_enablers = d3.select('body').append('form');
+
+var draw_line = function(chart_data, line_func, color, name) {
+    var p = svg.append('path')
         .attr('d', line_func(chart_data))
         .attr('stroke', color)
         .attr('stroke-width', '2')
@@ -116,6 +118,17 @@ var draw_line = function(chart_data, line_func, color) {
             var $this = $(this);
             $this.hide();
             window.setTimeout(function() { $this.show(); }, 1000);
+        });
+    path_enablers.append('label')
+        .attr('for', name)
+        .text(name);
+    path_enablers.append('input')
+        .attr('name', name)
+        .attr('type', 'checkbox')
+        .attr('checked', 'checked')
+        .on('change', function() {
+            if (this.checked) p.style('display', 'inline');
+            else p.style('display', 'none');
         });
 };
 
@@ -218,11 +231,11 @@ var render_chart = function(chart_data) {
     var line_func = d3.line().x(function(d) { return x(d.date); });
     var weight_color = 'blue';
     var fat_color = 'green';
-    if (fat_enabled) draw_line(chart_data.filter(function(d) {return d.fat !== undefined}), line_func.y(function(d) { return y_weight(d.weight); }), weight_color);
-    if (weight_enabled) draw_line(chart_data.filter(function(d) {return d.weight !== undefined}), line_func.y(function(d) { return y_fat(d.fat); }), fat_color);
+    if (fat_enabled) draw_line(chart_data.filter(function(d) {return d.fat !== undefined}), line_func.y(function(d) { return y_weight(d.weight); }), weight_color, 'fat');
+    if (weight_enabled) draw_line(chart_data.filter(function(d) {return d.weight !== undefined}), line_func.y(function(d) { return y_fat(d.fat); }), fat_color, 'weight');
     // mm data
-    draw_line(chart_data.filter(function(d) {return d.fat_mm !== undefined}), line_func.y(function(d) { return y_fat(d.fat_mm); }), 'pink');
-    draw_line(chart_data.filter(function(d) {return d.fat_mm24 !== undefined}), line_func.y(function(d) { return y_fat(d.fat_mm24); }), 'yellow');
+    draw_line(chart_data.filter(function(d) {return d.fat_mm !== undefined}), line_func.y(function(d) { return y_fat(d.fat_mm); }), 'pink', 'fat_mm');
+    draw_line(chart_data.filter(function(d) {return d.fat_mm24 !== undefined}), line_func.y(function(d) { return y_fat(d.fat_mm24); }), 'yellow', 'fat_mm2');
 
     var xAxis = d3.axisBottom(x).ticks(d3.timeMonday.every(1)).tickFormat(d3.timeFormat("%Y.%m.%d"));
     var yticks = function(linef) { return Math.round(linef.domain()[1] - linef.domain()[0])*2 }; // ticki co 0.5
