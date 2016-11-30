@@ -6,10 +6,39 @@ var url = '/withings/csv/'+wuserid;
 var url_mm = '/withings/csv-mm5/'+wuserid;
 
 var data_wcsv, data_mm;
+
+var console_box = d3.select('body').append('ol');
+
+var find_records = function(data, key) {
+    var last_value = data[data.length-1][key];
+    var reversed = data.slice().reverse();
+    var lower_value, higher_value;
+    var idx = reversed.length;
+    // could use .find(function(row) { return row < current_row });
+    // but want to avoid reiterating data.
+    for (var i=reversed.length-2; i--; i >= 0) {
+        var this_value = reversed[i][key];
+        if (key == 'fat_mm') console.log('reversed[i] = %o', reversed[i]);
+        if (lower_value === undefined && this_value < last_value) lower_value = reversed[i];
+        if (higher_value === undefined && this_value > last_value) higher_value = reversed[i];
+        if ((lower_value !== undefined) && (higher_value !== undefined)) break;
+    }
+    return [lower_value, higher_value];
+};
+
+var log_records = function(data, key, label) {
+    var result = find_records(data, key);
+    console_box.append('li').text('Current '+label+' '+data[data.length-1][key]);
+    if (result[1] !== undefined) console_box.append('li').text('Lowest '+label+' since '+jQuery.timeago(result[1].date)+' was '+result[1][key]);
+    if (result[0] !== undefined) console_box.append('li').text('Highest '+label+' since '+jQuery.timeago(result[0].date)+' was '+result[0][key]);
+};
+
 console.log('Fetching %o', url);
 d3.csv(url, type, function(error, data) {
         if (error) throw error;
         data_wcsv = data;
+        log_records(data, 'fat', 'fat');
+        log_records(data, 'weight', 'weight');
 });
 
 var type_mm = function(d) {
@@ -23,6 +52,8 @@ console.log('Fetching %o', url_mm);
 d3.csv(url_mm, type_mm, function(error, data) {
         if (error) throw error;
         data_mm = data;
+        log_records(data, 'fat_mm', 'fat (best of 5 days)');
+        log_records(data, 'fat_mm24', 'fat (best of 5*24h)');
 });
 
 var data_synchronizer = window.setInterval(function() {

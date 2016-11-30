@@ -49,6 +49,7 @@
     <script src="https://code.jquery.com/jquery-1.12.4.min.js" type="text/javascript"></script>
     <script src="/s/pickadate/picker.js" type="text/javascript"></script>
     <script src="/s/pickadate/picker.date.js" type="text/javascript"></script>
+    <script src="/s/jquery.timeago.js" type="text/javascript"></script>
     <script src="/s/date_range.js" type="text/javascript"></script>
 </body>
 </html>
